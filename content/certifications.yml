@@ -1,0 +1,29 @@
+# content/certifications.yml
+certifications:
+  - id: cert-cs50-cybersecurity
+    title: "CS50 Cybersecurity"
+    issuer: "Harvard University"
+    date: "2025-03"
+    file: "assets/resume/CS50 Cybersecurity.pdf"
+    image: "assets/images/CS50 Cybersecurity.png"
+
+  - id: cert-cs50-AI
+    title: "CS50AI"
+    issuer: "Harvard University"
+    date: "2025-03"
+    file: "assets/resume/CS50AI.pdf"
+    image: "assets/images/CS50AI.png"
+
+  - id: cert-cs50-P
+    title: "CS50P"
+    issuer: "Harvard University"
+    date: "2024-12"
+    file: "assets/resume/CS50P.pdf"
+    image: "assets/images/CS50P.png"
+
+  - id: cert-cs50-x
+    title: "CS50x"
+    issuer: "Harvard University"
+    date: "2024-08"
+    file: "assets/resume/CS50x.pdf"
+    image: "assets/images/CS50x.png"

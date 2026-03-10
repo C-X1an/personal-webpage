@@ -1,0 +1,21 @@
+{
+  "version": "1.1",
+  "last_completed_task": null,
+  "tasks": {
+    "task_01_init_repo": {"status": "done", "notes": "seed files added"},
+    "task_02_create_package_json_and_scaffold": {"status": "todo", "notes": null},
+    "task_03_create_pages_index_and_hero": {"status": "todo", "notes": null},
+    "task_04_add_hero_image_and_cta_behavior": {"status": "todo", "notes": null},
+    "task_05_wire_contact_formspree_api": {"status": "todo", "notes": null},
+    "task_06_scaffold_3d_canvas": {"status": "todo", "notes": null},
+    "task_07_waypoint_overlay_and_projection_util": {"status": "todo", "notes": null},
+    "task_08_particle_systems_for_sakura_fountain": {"status": "todo", "notes": null},
+    "task_09_panels_modals_and_theming": {"status": "todo", "notes": null},
+    "task_10_content_pages_projects_certifications": {"status": "todo", "notes": null},
+    "task_11_asset_sourcing_and_compression": {"status": "todo", "notes": null},
+    "task_12_tests_and_ci": {"status": "todo", "notes": null},
+    "task_13_accessibility_fixes": {"status": "todo", "notes": null},
+    "task_14_build_and_deploy_vercel_config": {"status": "todo", "notes": null}
+  },
+  "notes": "Codex must update the specific task entry when completed. If tokens/time run out, set the task being worked on to 'in_progress' and write short progress notes."
+}

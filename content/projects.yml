@@ -1,0 +1,23 @@
+# content/projects.yml
+# Minimal structured format Codex can read easily.
+projects:
+  - id: pr-brief
+    title: "PR Brief"
+    short: "Generates clear, structured PR summaries and posts them to PR comments."
+    description: |
+      PR Brief automatically generates concise PR summaries, highlights potential risks,
+      posts a GitHub check run, and pauses if secrets are detected.
+    repo_url: "https://github.com/C-X1an/PR-Brief-docs"
+    primary_language: "Python"
+    tags: ["automation","github","ai"]
+    thumbnail: "assets/images/PR Brief Logo.png" # optional
+
+  - id: driftline
+    title: "Driftline"
+    short: "Semantic Drift Detection of code from vision."
+    description: |
+      Driftline is a semantic project drift detection engine that understands how code changes affect a project's intended purpose and guarantees.
+    repo_url: "https://github.com/C-X1an/driftline"
+    primary_language: "Python"
+    tags: ["python","tooling"]
+    thumbnail: None
