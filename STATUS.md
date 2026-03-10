@@ -6,7 +6,7 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 ---
 
 ## Last update
-- **timestamp:** 2026-03-10T12:00:00Z
+- **timestamp:** 2026-03-10T23:22:22+08:00
 - **agent:** codex (automated)
 
 ---
@@ -19,7 +19,7 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 ---
 
 ## In-progress tasks
-- task_04_scaffold_3d_module: building react-three-fiber canvas, lazy loader, waypoint overlay helper (partial).
+- None. Awaiting the next approved task.
 
 ---
 
@@ -35,8 +35,14 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 ## Notes / blockers
 - No blockers at this time.
 - Asset downloads may take time; Codex will record each asset in `assets/3d/_licenses.json`.
+- `npm install` reported that `next@15.5.2` has a known security issue. Registry lookup after the push showed `15.5.12` is the latest `15.x` release, so that patch bump should be handled in the next reviewed diff before deployment work.
 
 ---
 
 ## How to resume
 To resume, open the repo and run `git status`, then run `npm run dev`. Codex will read `codex_state.json` and continue from `last_completed_task`.
+
+## Session log
+2026-03-10T22:59:18+08:00: Started `task_02_create_package_json_and_scaffold` after reading the required project docs, content YAML, design tokens, checkpoint files, and waypoint reference image. Current session scope is limited to the initial Next.js Pages Router scaffold, package/config files, and an accessible hero/contact placeholder implementation so the human can review a clean atomic diff before any install, build, or commit step.
+
+2026-03-10T23:22:22+08:00: Completed `task_02_create_package_json_and_scaffold`. Commit `d785e6a` was pushed to `origin/main` after `npm install`, `npm run lint`, `npm run build`, and `npm test` passed. Build status: passed. Preview URL: not deployed. Assets downloaded: none.
