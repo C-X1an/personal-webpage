@@ -4,6 +4,7 @@ node_modules/
 out/
 dist/
 build/
+coverage/
 
 # env
 .env
@@ -24,3 +25,7 @@ assets/3d/*.gltf
 
 # logs
 *.log
+npm-debug.log*
+
+# codex artifacts
+codex_out/

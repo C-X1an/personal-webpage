@@ -1,0 +1,110 @@
+.hero {
+  position: relative;
+  isolation: isolate;
+  width: min(1160px, 100%);
+  min-height: clamp(540px, 78vh, 820px);
+  margin: 0 auto 24px;
+  border-radius: var(--radius-lg);
+  overflow: clip;
+  box-shadow: 0 30px 80px rgba(8, 17, 35, 0.2);
+}
+
+.imageFrame {
+  position: absolute;
+  inset: 0;
+}
+
+.image {
+  object-fit: cover;
+  object-position: center;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(7, 14, 28, 0.12), rgba(7, 14, 28, 0.54)),
+    linear-gradient(120deg, rgba(255, 183, 213, 0.12), transparent 48%);
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  min-height: inherit;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #fffaf6;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 12ch;
+  margin: 0;
+  font-size: clamp(3rem, 8vw, 5.75rem);
+  line-height: 0.95;
+}
+
+.summary {
+  max-width: 52ch;
+  margin: 0;
+  font-size: clamp(1rem, 1.6vw, 1.18rem);
+  line-height: 1.7;
+  color: rgba(255, 250, 246, 0.88);
+}
+
+.ticketButton {
+  min-width: 180px;
+  min-height: 56px;
+  padding: 14px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fff5e7 0%, #ffd2df 100%);
+  color: #081123;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 18px 30px rgba(8, 17, 35, 0.2);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ticketButton:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 24px 42px rgba(8, 17, 35, 0.24);
+}
+
+.status {
+  min-height: 1.5rem;
+  margin: 0;
+  max-width: 40ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 250, 246, 0.86);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.statusVisible {
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    min-height: 520px;
+  }
+
+  .title {
+    max-width: 14ch;
+  }
+}
