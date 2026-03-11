@@ -29,3 +29,6 @@ npm-debug.log*
 
 # codex artifacts
 codex_out/
+
+.vercel
+.env*.local
