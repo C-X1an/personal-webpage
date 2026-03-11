@@ -30,5 +30,8 @@ npm-debug.log*
 # codex artifacts
 codex_out/
 
-.vercel
+.vercel/
 .env*.local
+.cursor/
+.skills/
+codex_state.json
