@@ -6,8 +6,10 @@
   --color-text: #081123;
   --color-muted: #51647d;
   --color-sakura: #ffb7d5;
+  --color-sakura-soft: #f6d9e8;
   --color-spring: #8fcb9b;
   --color-fountain: #bee3f8;
+  --color-fountain-soft: rgba(180, 210, 255, 0.85);
   --color-outline: rgba(8, 17, 35, 0.14);
   --color-shadow: rgba(8, 17, 35, 0.12);
   --color-focus: #d35454;

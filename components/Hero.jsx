@@ -4,20 +4,29 @@ import Image from 'next/image';
 import heroImage from '../assets/images/hero.png';
 import styles from '../styles/Hero.module.css';
 
-export default function Hero({
-  onTicketClick,
-  isTransitioning = false,
-  isGardenOpen = false,
-}) {
+export const HERO_PHASE_CLASSES = {
+  idle: '',
+  zooming: 'zooming',
+  holding: 'holding',
+  open: 'open',
+};
+
+export function getHeroPhaseClassName(phase = 'idle') {
+  return HERO_PHASE_CLASSES[phase] || '';
+}
+
+export default function Hero({ onTicketClick, phase = 'idle' }) {
+  const phaseClassName = getHeroPhaseClassName(phase);
+
   return (
     <section
       className={clsx(styles.hero, {
-        [styles.heroTransitioning]: isTransitioning,
-        [styles.heroGardenOpen]: isGardenOpen,
+        [styles[phaseClassName]]: Boolean(phaseClassName),
       })}
+      data-phase={phase}
       aria-label="Chong Xian's garden entrance"
     >
-      <div className={styles.imageFrame}>
+      <div className={styles.heroMedia}>
         <Image
           src={heroImage}
           alt="Garden gate illustration for Chong Xian's portfolio"
@@ -28,17 +37,16 @@ export default function Hero({
         />
       </div>
 
-      <div className={styles.heroTint} aria-hidden="true" />
-      <div className={styles.heroGlow} aria-hidden="true" />
+      <div className={styles.scrim} aria-hidden="true" />
+      <div className={styles.lens} aria-hidden="true" />
 
       <div className={styles.heroCenter}>
         <button
           type="button"
-          role="button"
-          tabIndex={0}
-          aria-label="Enter Chong Xian's garden (free ticket)"
           className={styles.ticketButton}
           onClick={onTicketClick}
+          aria-label="Enter Chong Xian's garden with the free ticket"
+          disabled={phase !== 'idle'}
         >
           Free ticket
         </button>

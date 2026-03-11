@@ -6,7 +6,9 @@ education:
     start: "2022"
     end: "2023"
     bullets:
-      # - Codex to populate
+      - "Completed a rigorous pre-university curriculum with emphasis on analytical writing, mathematics, and problem solving."
+      - "Built strong independent study habits and exam discipline while balancing multiple intensive subjects."
+      - "Strengthened presentation, collaboration, and deadline management through coursework and project-based assignments."
 
   - id: University
     title: "Bachelors of Computing (Hons) in Computer Science"
@@ -14,7 +16,9 @@ education:
     start: "2026"
     end: "2030"
     bullets:
-      # - Codex to populate
+      - "Preparing for a computer science degree track focused on software engineering, systems thinking, and applied problem solving."
+      - "Targeting deeper work in algorithms, application development, and real-world technical project execution."
+      - "Planned academic pathway centers on building a stronger foundation for product engineering and long-term technical growth."
 
 job:
   - id: job-1
@@ -23,12 +27,8 @@ job:
     start: "2024-02"
     end: "2024-04"
     bullets:
-      - • Maintained the security integrity of company laptops and workstations, including OS hardening and security patch deployment.
-
-      - • Performed device inventory management, provisioning and dispatching systems to departments with consistent configuration standards.
-
-      - • Diagnosed and resolved software and hardware issues across end-user systems, reducing downtime and improving operational reliability.
-
-      - • Developed and contributed to automation scripts using Shell and PowerShell to streamline repetitive IT workflows and administrative tasks.
-
-      - • Gained hands-on exposure to enterprise IT tooling, troubleshooting practices, and operational security considerations.
+      - "Maintained the security posture of company laptops and workstations through OS hardening and patch deployment."
+      - "Managed device inventory, provisioning, and dispatch processes with consistent configuration standards."
+      - "Diagnosed and resolved software and hardware issues across end-user systems to reduce downtime."
+      - "Built and contributed to Shell and PowerShell automation for repetitive IT workflows."
+      - "Gained hands-on experience with enterprise troubleshooting, operational security, and day-to-day IT support."

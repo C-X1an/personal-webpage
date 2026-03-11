@@ -1,895 +1,729 @@
 import clsx from 'clsx';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
 
-import styles from '../styles/Hero.module.css';
+import CertificationGrid from './CertificationGrid';
+import ContactPanel from './ContactPanel';
+import EducationTimeline from './EducationTimeline';
+import ModalPanel from './ModalPanel';
+import ProjectShowcase from './ProjectShowcase';
+import WaypointOverlay from './WaypointOverlay';
+import styles from '../styles/GardenCanvas.module.css';
 
-const CAMERA_ORIGIN = { x: 0, y: 2.35, z: 6.15 };
-const CANOPY_SWAY_Y = 0.08;
-const CANOPY_SWAY_Z = 0.03;
-const PARTICLE_COUNT = 16;
+const CAMERA_INTRO_POSITION = new THREE.Vector3(0.35, 7.2, 5.25);
+const CAMERA_FINAL_POSITION = new THREE.Vector3(0.45, 14.6, 9.4);
+const CAMERA_LOOK_AT = new THREE.Vector3(0.1, 0.8, 0.7);
+const PARTICLE_COUNT = 150;
+
 const WAYPOINTS = [
-  {
-    id: 'projects',
-    label: 'Projects',
-    theme: 'spring',
-    style: { left: '31%', top: '62%' },
-  },
   {
     id: 'certifications',
     label: 'Certifications',
     theme: 'sakura',
-    style: { left: '50%', top: '36%' },
+    anchor: [-1.1, 3.2, -1.8],
+    color: 'rgba(226, 148, 187, 0.94)',
+    labelColor: 'rgba(226, 148, 187, 0.9)',
+    inkColor: '#2f1722',
   },
   {
-    id: 'timeline',
-    label: 'Education and work',
+    id: 'projects',
+    label: 'Projects',
+    theme: 'spring',
+    anchor: [-4.2, 1.26, 1.3],
+    color: 'rgba(129, 181, 139, 0.94)',
+    labelColor: 'rgba(129, 181, 139, 0.9)',
+    inkColor: '#112117',
+  },
+  {
+    id: 'education',
+    label: 'Education + Work',
     theme: 'fountain',
-    style: { left: '76%', top: '56%' },
+    anchor: [3.8, 1.3, 0.52],
+    color: 'rgba(121, 174, 207, 0.94)',
+    labelColor: 'rgba(121, 174, 207, 0.9)',
+    inkColor: '#0f2237',
   },
   {
     id: 'contact',
     label: 'Contact kiosk',
     theme: 'warm',
-    style: { left: '60%', top: '70%' },
+    anchor: [1.4, 1.28, 3.35],
+    color: 'rgba(197, 155, 103, 0.94)',
+    labelColor: 'rgba(197, 155, 103, 0.9)',
+    inkColor: '#291d12',
   },
 ];
-const PANEL_CONTENT = {
-  projects: {
-    title: 'Projects',
-    theme: 'spring',
-    intro:
-      'The pavilion keeps the first two project stories ready for a fuller panel build in later tasks.',
-    items: [
-      'PR Brief: structured pull request summaries, risk notes, and automation hooks.',
-      'Driftline: semantic project drift detection for codebases and intended product scope.',
-    ],
-  },
+
+const PANEL_COPY = {
   certifications: {
+    eyebrow: 'Sakura canopy',
     title: 'Certifications',
+    intro:
+      'Searchable certificate cards sit in a soft pink panel that stays readable while the garden remains visually present behind the overlay.',
     theme: 'sakura',
-    intro:
-      'The sakura waypoint previews the certification grove with a muted pink panel and readable foreground contrast.',
-    items: [
-      'CS50 Cybersecurity, Harvard University, March 2025.',
-      'CS50AI, Harvard University, March 2025.',
-      'CS50P, Harvard University, December 2024.',
-      'CS50x, Harvard University, August 2024.',
-    ],
   },
-  timeline: {
-    title: 'Education and Work',
-    theme: 'fountain',
+  projects: {
+    eyebrow: 'Playground pavilion',
+    title: 'Projects',
     intro:
-      'The fountain panel anchors the timeline branch with a cool, soft surface that stays easy on the eyes.',
-    items: [
-      'GCE A Levels, Tampines Meridian Junior College, 2022 to 2023.',
-      'BComp in Computer Science, Nanyang Technological University, 2026 to 2030.',
-      'Information Technology Officer, Setsco Services, February 2024 to April 2024.',
-    ],
+      'The pavilion panel keeps project context concise: what each build does, the main stack, and the fastest route to the source.',
+    theme: 'spring',
+  },
+  education: {
+    eyebrow: 'Fountain route',
+    title: 'Education and work',
+    intro:
+      'This timeline uses equal row spacing so each stop keeps the same visual cadence even when bullet counts vary.',
+    theme: 'fountain',
   },
   contact: {
-    title: 'Contact kiosk',
-    theme: 'warm',
+    eyebrow: 'Info kiosk',
+    title: 'Contact',
     intro:
-      'The kiosk remains intentionally light in this scaffold while the later contact task wires delivery and richer content.',
-    items: [
-      'Desktop garden panels already support theming, dimming, and blocked background interactions.',
-      'Smaller screens use the 2D route instead of mounting the WebGL experience.',
-    ],
+      'The contact panel sends Formspree requests client-side and keeps a direct mail draft available when delivery is unavailable.',
+    theme: 'warm',
   },
 };
-const PANEL_THEME_STYLES = {
-  sakura: {
-    backgroundColor: 'rgba(246, 217, 232, 0.96)',
-    borderColor: 'rgba(127, 81, 98, 0.2)',
-    color: '#2f1f26',
-  },
-  spring: {
-    backgroundColor: 'rgba(226, 241, 229, 0.96)',
-    borderColor: 'rgba(72, 105, 81, 0.2)',
-    color: '#15241b',
-  },
-  fountain: {
-    backgroundColor: 'rgba(221, 237, 245, 0.96)',
-    borderColor: 'rgba(69, 100, 121, 0.2)',
-    color: '#132436',
-  },
-  warm: {
-    backgroundColor: 'rgba(247, 238, 226, 0.97)',
-    borderColor: 'rgba(122, 98, 69, 0.18)',
-    color: '#2e2518',
-  },
-};
+
+const BLOSSOM_OFFSETS = buildBlossomOffsets();
+const PATH_STONES = buildPathStones();
+const SHRUB_POSITIONS = [
+  [-5.2, -0.48, 0.1],
+  [-4.6, -0.4, 2.2],
+  [4.7, -0.42, -0.1],
+  [4.5, -0.4, 2.2],
+  [0.9, -0.44, 4.6],
+];
 
 function buildBlossomOffsets() {
   const offsets = [];
 
-  for (let index = 0; index < 15; index += 1) {
-    const angle = (Math.PI * 2 * index) / 15;
-    const radius = index % 3 === 0 ? 0.95 : 0.7 + (index % 4) * 0.08;
-    const height = -0.2 + (index % 5) * 0.16;
-    const scale = 0.75 + (index % 4) * 0.12;
+  for (let index = 0; index < 26; index += 1) {
+    const angle = (Math.PI * 2 * index) / 26;
+    const radius = 1.2 + (index % 4) * 0.22;
+    const height = -0.3 + (index % 6) * 0.22;
+    const scale = 0.52 + (index % 5) * 0.12;
 
     offsets.push({
-      x: Math.cos(angle) * radius * 0.95,
+      x: Math.cos(angle) * radius,
       y: height,
-      z: Math.sin(angle) * radius * 0.72,
+      z: Math.sin(angle) * radius * 0.78,
       scale,
     });
   }
 
-  offsets.push({ x: 0, y: 0.24, z: 0, scale: 1.16 });
-  offsets.push({ x: -0.34, y: 0.42, z: 0.14, scale: 0.88 });
-  offsets.push({ x: 0.32, y: 0.36, z: -0.18, scale: 0.86 });
+  offsets.push({ x: 0, y: 0.48, z: 0, scale: 1.16 });
+  offsets.push({ x: -0.52, y: 0.62, z: -0.2, scale: 0.92 });
+  offsets.push({ x: 0.42, y: 0.56, z: 0.16, scale: 0.92 });
 
   return offsets;
 }
 
-function resetParticle(particle, index, spread = 0) {
-  const angle = (Math.PI * 2 * index) / PARTICLE_COUNT + Math.random() * 0.45;
-  const radius = 0.24 + Math.random() * (0.7 + spread);
-
-  particle.x = Math.cos(angle) * radius * 0.68;
-  particle.y = 1.95 + Math.random() * 0.9;
-  particle.z = Math.sin(angle) * radius * 0.56;
-  particle.vx = (Math.random() - 0.5) * 0.18;
-  particle.vy = 0.36 + Math.random() * 0.22;
-  particle.vz = (Math.random() - 0.5) * 0.15;
-  particle.rotation = Math.random() * Math.PI;
-  particle.spin = (Math.random() - 0.5) * 1.8;
-  particle.scale = 0.05 + Math.random() * 0.05;
-  particle.delay = index * 0.025;
+function buildPathStones() {
+  return Array.from({ length: 10 }, (_, index) => ({
+    position: [-0.4 + (index % 3) * 0.45, -0.95, 4.5 - index * 0.76],
+    scale: 0.5 + ((index + 1) % 3) * 0.12,
+    rotation: ((index % 4) - 1.5) * 0.18,
+  }));
 }
 
-function resetParticles(particles, spread = 0.3) {
-  particles.forEach((particle, index) => {
-    resetParticle(particle, index, spread);
-  });
+function createProjectedWaypoints() {
+  return WAYPOINTS.map((waypoint) => ({
+    ...waypoint,
+    x: 0,
+    y: 0,
+    visible: false,
+  }));
 }
 
-function ensureParticleState(ref) {
-  if (!ref.current) {
-    ref.current = Array.from({ length: PARTICLE_COUNT }, () => ({}));
-    resetParticles(ref.current);
+function createBurstParticles() {
+  return Array.from({ length: PARTICLE_COUNT }, () => ({
+    active: false,
+    delay: 0,
+    life: 0,
+    maxLife: 0,
+    scale: 0,
+    position: new THREE.Vector3(),
+    velocity: new THREE.Vector3(),
+    spin: 0,
+    rotation: new THREE.Euler(),
+  }));
+}
+
+function getThemeColor(theme) {
+  switch (theme) {
+    case 'fountain':
+      return '#b7dbff';
+    case 'spring':
+      return '#b2d9b9';
+    case 'warm':
+      return '#f2c996';
+    case 'sakura':
+    default:
+      return '#f6d9e8';
   }
-
-  return ref.current;
 }
 
-function updateParticleInstances(mesh, particles, dummy) {
+function resetParticle(particle, anchor, theme, stagger = 0) {
+  const spread = theme === 'fountain' ? 1.2 : 0.9;
+  const lift = theme === 'fountain' ? 0.8 : 0.45;
+  const angle = Math.random() * Math.PI * 2;
+  const radius = 0.16 + Math.random() * spread;
+
+  particle.active = true;
+  particle.delay = stagger;
+  particle.maxLife = 1.8 + Math.random() * 2.2;
+  particle.life = particle.maxLife;
+  particle.scale = 0.04 + Math.random() * 0.08;
+  particle.position.set(
+    anchor[0] + Math.cos(angle) * radius * 0.18,
+    anchor[1] + Math.random() * 0.22,
+    anchor[2] + Math.sin(angle) * radius * 0.18,
+  );
+  particle.velocity.set(
+    Math.cos(angle) * radius * 0.34,
+    lift + Math.random() * 0.3,
+    Math.sin(angle) * radius * 0.28,
+  );
+  particle.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+  particle.spin = (Math.random() - 0.5) * 2.2;
+}
+
+function syncParticleInstances(mesh, particles, dummy) {
+  let activeCount = 0;
+
   particles.forEach((particle, index) => {
-    dummy.position.set(particle.x, particle.y, particle.z);
-    dummy.rotation.set(0, particle.rotation, particle.rotation * 0.35);
-    dummy.scale.setScalar(particle.scale);
+    if (!particle.active || particle.delay > 0 || particle.life <= 0) {
+      dummy.position.set(0, -100, 0);
+      dummy.scale.setScalar(0.0001);
+      dummy.rotation.copy(particle.rotation);
+    } else {
+      dummy.position.copy(particle.position);
+      dummy.scale.setScalar(particle.scale);
+      dummy.rotation.copy(particle.rotation);
+      activeCount += 1;
+    }
+
     dummy.updateMatrix();
     mesh.setMatrixAt(index, dummy.matrix);
   });
 
   mesh.instanceMatrix.needsUpdate = true;
+
+  return activeCount;
 }
 
-function buildBranchPositions() {
-  return [
-    {
-      position: [0.02, 1.2, 0.06],
-      rotation: [0.62, 0.16, -0.58],
-      scale: [0.16, 1.55, 0.16],
-    },
-    {
-      position: [-0.14, 1.36, -0.02],
-      rotation: [0.78, -0.52, 0.42],
-      scale: [0.14, 1.15, 0.14],
-    },
-    {
-      position: [0.22, 1.42, -0.1],
-      rotation: [0.44, 0.7, -0.16],
-      scale: [0.12, 0.98, 0.12],
-    },
-  ];
-}
-
-function FiberGarden({ fiber, threeModule, burstCount }) {
-  const Canvas = fiber.Canvas;
-
-  return (
-    <Canvas
-      className={styles.gardenCanvas}
-      camera={{ position: [CAMERA_ORIGIN.x, CAMERA_ORIGIN.y, CAMERA_ORIGIN.z], fov: 40 }}
-      dpr={[1, 1.5]}
-      frameloop="demand"
-      gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
-      shadows
-      onCreated={({ gl, invalidate }) => {
-        gl.setClearColor('#000000', 0);
-        invalidate();
-      }}
-    >
-      <FiberScene fiber={fiber} threeModule={threeModule} burstCount={burstCount} />
-    </Canvas>
-  );
-}
-
-function FiberScene({ fiber, threeModule, burstCount }) {
+function SceneRig({
+  pointerRef,
+  burstTrigger,
+  projectedWaypointsRef,
+  onProjectWaypoints,
+  reducedMotion,
+  invalidateRef,
+}) {
+  const rootRef = useRef(null);
   const canopyRef = useRef(null);
   const blossomMeshRef = useRef(null);
   const particleMeshRef = useRef(null);
-  const blossomOffsetsRef = useRef(null);
-  const particleStateRef = useRef(null);
-  const dummyRef = useRef(null);
-  const { invalidate } = fiber.useThree();
-
-  if (!blossomOffsetsRef.current) {
-    blossomOffsetsRef.current = buildBlossomOffsets();
-  }
-
-  if (!dummyRef.current) {
-    dummyRef.current = new threeModule.Object3D();
-  }
-
-  const particles = ensureParticleState(particleStateRef);
+  const particleMaterialRef = useRef(null);
+  const dummyRef = useRef(new THREE.Object3D());
+  const particleStateRef = useRef(createBurstParticles());
+  const burstStateRef = useRef({
+    anchor: WAYPOINTS[0].anchor,
+    endTime: 0,
+    theme: 'sakura',
+    token: 0,
+  });
+  const introProgressRef = useRef(reducedMotion ? 1 : 0);
+  const cameraTargetRef = useRef(CAMERA_FINAL_POSITION.clone());
+  const lookTargetRef = useRef(CAMERA_LOOK_AT.clone());
+  const projectionVectorRef = useRef(new THREE.Vector3());
+  const { camera, size, invalidate, gl } = useThree();
 
   useEffect(() => {
-    if (!blossomMeshRef.current || !particleMeshRef.current) {
+    invalidateRef.current = invalidate;
+  }, [invalidate, invalidateRef]);
+
+  useEffect(() => {
+    gl.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    gl.setClearColor('#000000', 0);
+  }, [gl]);
+
+  useEffect(() => {
+    if (!blossomMeshRef.current) {
       return;
     }
 
-    blossomOffsetsRef.current.forEach((offset, index) => {
+    BLOSSOM_OFFSETS.forEach((offset, index) => {
       dummyRef.current.position.set(offset.x, offset.y, offset.z);
       dummyRef.current.scale.setScalar(offset.scale);
+      dummyRef.current.rotation.set(0, 0, 0);
       dummyRef.current.updateMatrix();
       blossomMeshRef.current.setMatrixAt(index, dummyRef.current.matrix);
     });
 
     blossomMeshRef.current.instanceMatrix.needsUpdate = true;
-    updateParticleInstances(particleMeshRef.current, particles, dummyRef.current);
     invalidate();
-  }, [invalidate, particles]);
+  }, [invalidate]);
 
   useEffect(() => {
-    resetParticles(particles, 0.45);
-    if (particleMeshRef.current) {
-      updateParticleInstances(particleMeshRef.current, particles, dummyRef.current);
+    if (!particleMeshRef.current) {
+      return;
     }
+
+    syncParticleInstances(
+      particleMeshRef.current,
+      particleStateRef.current,
+      dummyRef.current,
+    );
     invalidate();
-  }, [burstCount, invalidate, particles]);
+  }, [invalidate]);
 
-  fiber.useFrame((state, delta) => {
-    const elapsed = state.clock.getElapsedTime();
-    const targetX = state.pointer.x * 0.4;
-    const targetY = CAMERA_ORIGIN.y + state.pointer.y * 0.12;
+  useEffect(() => {
+    if (!particleMaterialRef.current || burstTrigger.token === 0) {
+      return;
+    }
 
-    state.camera.position.x += (targetX - state.camera.position.x) * Math.min(1, delta * 2.6);
-    state.camera.position.y += (targetY - state.camera.position.y) * Math.min(1, delta * 2.6);
-    state.camera.position.z +=
-      (CAMERA_ORIGIN.z - state.camera.position.z) * Math.min(1, delta * 2.6);
-    state.camera.lookAt(0, 0.9, 0);
+    burstStateRef.current = {
+      anchor: burstTrigger.anchor,
+      endTime:
+        performance.now() + (reducedMotion ? 1200 : 12000),
+      theme: burstTrigger.theme,
+      token: burstTrigger.token,
+    };
+
+    particleMaterialRef.current.color.set(getThemeColor(burstTrigger.theme));
+
+    particleStateRef.current.forEach((particle, index) => {
+      resetParticle(
+        particle,
+        burstTrigger.anchor,
+        burstTrigger.theme,
+        index * 0.018,
+      );
+    });
+
+    invalidate();
+  }, [burstTrigger, invalidate, reducedMotion]);
+
+  useFrame((state, delta) => {
+    const now = performance.now();
+    const introDuration = reducedMotion ? 0.01 : 1.18;
+    const pointer = pointerRef.current;
+
+    introProgressRef.current = Math.min(
+      1,
+      introProgressRef.current + delta / introDuration,
+    );
+
+    const easedIntro = 1 - (1 - introProgressRef.current) ** 3;
+
+    cameraTargetRef.current.lerpVectors(
+      CAMERA_INTRO_POSITION,
+      CAMERA_FINAL_POSITION,
+      easedIntro,
+    );
+    cameraTargetRef.current.x += pointer.x * 0.56;
+    cameraTargetRef.current.y += pointer.y * 0.34;
+    cameraTargetRef.current.z += pointer.x * 0.28;
+
+    lookTargetRef.current.copy(CAMERA_LOOK_AT);
+    lookTargetRef.current.x += pointer.x * 0.62;
+    lookTargetRef.current.z += pointer.y * 0.34;
+
+    camera.position.lerp(cameraTargetRef.current, 0.12);
+    camera.lookAt(lookTargetRef.current);
+
+    if (rootRef.current) {
+      rootRef.current.rotation.y = THREE.MathUtils.lerp(
+        rootRef.current.rotation.y,
+        pointer.x * 0.08,
+        0.08,
+      );
+      rootRef.current.rotation.x = THREE.MathUtils.lerp(
+        rootRef.current.rotation.x,
+        pointer.y * 0.035,
+        0.08,
+      );
+    }
 
     if (canopyRef.current) {
-      canopyRef.current.rotation.y = Math.sin(elapsed * 0.42) * CANOPY_SWAY_Y;
-      canopyRef.current.rotation.z = Math.cos(elapsed * 0.58) * CANOPY_SWAY_Z;
+      const elapsed = state.clock.getElapsedTime();
+      canopyRef.current.rotation.y = Math.sin(elapsed * 0.34) * 0.06;
+      canopyRef.current.rotation.z = Math.cos(elapsed * 0.42) * 0.025;
     }
 
-    particles.forEach((particle, index) => {
-      if (particle.delay > 0) {
-        particle.delay -= delta;
-        return;
-      }
-
-      particle.x += particle.vx * delta;
-      particle.y -= particle.vy * delta;
-      particle.z += particle.vz * delta;
-      particle.rotation += particle.spin * delta;
-
-      if (particle.y < -0.85) {
-        resetParticle(particle, index, 0.45);
-      }
-    });
+    let activeParticles = 0;
 
     if (particleMeshRef.current) {
-      updateParticleInstances(particleMeshRef.current, particles, dummyRef.current);
-    }
+      particleStateRef.current.forEach((particle) => {
+        if (!particle.active) {
+          return;
+        }
 
-    invalidate();
-  });
-
-  return (
-    <>
-      <ambientLight intensity={1.1} />
-      <directionalLight
-        castShadow
-        intensity={1.35}
-        position={[4.8, 7.2, 4.1]}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
-      <directionalLight intensity={0.35} position={[-4, 3, -2]} />
-
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.08, 0]}>
-        <planeGeometry args={[18, 18, 1, 1]} />
-        <meshStandardMaterial color="#e6dfd0" roughness={1} />
-      </mesh>
-
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.05, -0.12]}>
-        <planeGeometry args={[1.65, 8.2, 1, 1]} />
-        <meshStandardMaterial color="#cdb79a" roughness={0.92} />
-      </mesh>
-
-      <group position={[0, -0.02, -0.28]}>
-        <mesh castShadow position={[0, 0.12, 0]}>
-          <cylinderGeometry args={[0.2, 0.32, 2.45, 7]} />
-          <meshStandardMaterial color="#5c3c2f" roughness={0.94} />
-        </mesh>
-
-        {buildBranchPositions().map((branch, index) => (
-          <mesh
-            key={branch.position.join('-')}
-            castShadow
-            position={branch.position}
-            rotation={branch.rotation}
-            scale={branch.scale}
-          >
-            <cylinderGeometry args={[0.2, 0.42, 1, 6]} />
-            <meshStandardMaterial
-              color={index === 0 ? '#6b4737' : '#5f3f31'}
-              roughness={0.96}
-            />
-          </mesh>
-        ))}
-
-        <group ref={canopyRef} position={[0, 1.8, 0]}>
-          <instancedMesh
-            ref={blossomMeshRef}
-            args={[undefined, undefined, blossomOffsetsRef.current.length]}
-            castShadow
-          >
-            <sphereGeometry args={[0.38, 7, 7]} />
-            <meshStandardMaterial color="#f4bfd7" roughness={0.6} />
-          </instancedMesh>
-        </group>
-      </group>
-
-      <group position={[-2.25, -0.76, 0.56]}>
-        <mesh castShadow position={[0, 0.18, 0]}>
-          <boxGeometry args={[1.2, 0.34, 1.1]} />
-          <meshStandardMaterial color="#816042" roughness={0.9} />
-        </mesh>
-        <mesh castShadow position={[0, 0.64, 0]} rotation={[0, Math.PI / 4, 0]}>
-          <coneGeometry args={[0.95, 0.56, 4]} />
-          <meshStandardMaterial color="#c58d62" roughness={0.82} />
-        </mesh>
-      </group>
-
-      <group position={[2.55, -0.76, 0.62]}>
-        <mesh castShadow position={[0, 0.16, 0]}>
-          <cylinderGeometry args={[0.78, 0.92, 0.28, 12]} />
-          <meshStandardMaterial color="#e9dcc9" roughness={0.98} />
-        </mesh>
-        <mesh castShadow position={[0, 0.44, 0]}>
-          <cylinderGeometry args={[0.36, 0.48, 0.32, 12]} />
-          <meshStandardMaterial color="#f3ebdf" roughness={0.92} />
-        </mesh>
-        <mesh position={[0, 0.72, 0]}>
-          <cylinderGeometry args={[0.05, 0.05, 0.4, 10]} />
-          <meshStandardMaterial color="#b9dced" roughness={0.3} />
-        </mesh>
-      </group>
-
-      <group position={[1.05, -0.72, 1.36]}>
-        <mesh castShadow position={[0, 0.18, 0]}>
-          <boxGeometry args={[0.72, 0.34, 0.38]} />
-          <meshStandardMaterial color="#ceb894" roughness={0.95} />
-        </mesh>
-        <mesh castShadow position={[0, 0.5, 0]}>
-          <boxGeometry args={[0.42, 0.42, 0.22]} />
-          <meshStandardMaterial color="#8c6743" roughness={0.88} />
-        </mesh>
-      </group>
-
-      <instancedMesh ref={particleMeshRef} args={[undefined, undefined, PARTICLE_COUNT]}>
-        <sphereGeometry args={[0.14, 5, 5]} />
-        <meshStandardMaterial color="#f6d9e8" roughness={0.45} />
-      </instancedMesh>
-    </>
-  );
-}
-
-function PlainThreeGarden({ threeModule, burstCount }) {
-  const canvasRef = useRef(null);
-  const shellRef = useRef(null);
-  const burstRef = useRef(burstCount);
-
-  burstRef.current = burstCount;
-
-  useEffect(() => {
-    if (!canvasRef.current || !shellRef.current) {
-      return undefined;
-    }
-
-    const shellNode = shellRef.current;
-    const THREE = threeModule;
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      canvas: canvasRef.current,
-      powerPreference: 'high-performance',
-    });
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 40);
-    const root = new THREE.Group();
-    const canopy = new THREE.Group();
-    const particleDummy = new THREE.Object3D();
-    const blossomDummy = new THREE.Object3D();
-    const particleState = Array.from({ length: PARTICLE_COUNT }, () => ({}));
-    const blossomOffsets = buildBlossomOffsets();
-    const pointer = { x: 0, y: 0 };
-    let animationFrameId = 0;
-    let previousBurst = burstRef.current;
-    let disposed = false;
-    const clock = new THREE.Clock();
-
-    resetParticles(particleState);
-
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    camera.position.set(CAMERA_ORIGIN.x, CAMERA_ORIGIN.y, CAMERA_ORIGIN.z);
-    scene.add(root);
-
-    const ambientLight = new THREE.AmbientLight('#ffffff', 1.1);
-    scene.add(ambientLight);
-
-    const keyLight = new THREE.DirectionalLight('#ffffff', 1.35);
-    keyLight.position.set(4.8, 7.2, 4.1);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.set(1024, 1024);
-    scene.add(keyLight);
-
-    const fillLight = new THREE.DirectionalLight('#ffffff', 0.35);
-    fillLight.position.set(-4, 3, -2);
-    scene.add(fillLight);
-
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(18, 18, 1, 1),
-      new THREE.MeshStandardMaterial({ color: '#e6dfd0', roughness: 1 }),
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -1.08;
-    ground.receiveShadow = true;
-    root.add(ground);
-
-    const path = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.65, 8.2, 1, 1),
-      new THREE.MeshStandardMaterial({ color: '#cdb79a', roughness: 0.92 }),
-    );
-    path.rotation.x = -Math.PI / 2;
-    path.position.set(0, -1.05, -0.12);
-    path.receiveShadow = true;
-    root.add(path);
-
-    const treeGroup = new THREE.Group();
-    treeGroup.position.set(0, -0.02, -0.28);
-    root.add(treeGroup);
-
-    const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.2, 0.32, 2.45, 7),
-      new THREE.MeshStandardMaterial({ color: '#5c3c2f', roughness: 0.94 }),
-    );
-    trunk.position.set(0, 0.12, 0);
-    trunk.castShadow = true;
-    treeGroup.add(trunk);
-
-    buildBranchPositions().forEach((branch, index) => {
-      const mesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.2, 0.42, 1, 6),
-        new THREE.MeshStandardMaterial({
-          color: index === 0 ? '#6b4737' : '#5f3f31',
-          roughness: 0.96,
-        }),
-      );
-      mesh.position.set(...branch.position);
-      mesh.rotation.set(...branch.rotation);
-      mesh.scale.set(...branch.scale);
-      mesh.castShadow = true;
-      treeGroup.add(mesh);
-    });
-
-    canopy.position.set(0, 1.8, 0);
-    treeGroup.add(canopy);
-
-    const blossomMesh = new THREE.InstancedMesh(
-      new THREE.SphereGeometry(0.38, 7, 7),
-      new THREE.MeshStandardMaterial({ color: '#f4bfd7', roughness: 0.6 }),
-      blossomOffsets.length,
-    );
-    blossomMesh.castShadow = true;
-    blossomOffsets.forEach((offset, index) => {
-      blossomDummy.position.set(offset.x, offset.y, offset.z);
-      blossomDummy.scale.setScalar(offset.scale);
-      blossomDummy.updateMatrix();
-      blossomMesh.setMatrixAt(index, blossomDummy.matrix);
-    });
-    canopy.add(blossomMesh);
-
-    const pavilion = new THREE.Group();
-    pavilion.position.set(-2.25, -0.76, 0.56);
-    root.add(pavilion);
-
-    const pavilionBase = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, 0.34, 1.1),
-      new THREE.MeshStandardMaterial({ color: '#816042', roughness: 0.9 }),
-    );
-    pavilionBase.position.set(0, 0.18, 0);
-    pavilionBase.castShadow = true;
-    pavilion.add(pavilionBase);
-
-    const pavilionRoof = new THREE.Mesh(
-      new THREE.ConeGeometry(0.95, 0.56, 4),
-      new THREE.MeshStandardMaterial({ color: '#c58d62', roughness: 0.82 }),
-    );
-    pavilionRoof.position.set(0, 0.64, 0);
-    pavilionRoof.rotation.y = Math.PI / 4;
-    pavilionRoof.castShadow = true;
-    pavilion.add(pavilionRoof);
-
-    const fountain = new THREE.Group();
-    fountain.position.set(2.55, -0.76, 0.62);
-    root.add(fountain);
-
-    [
-      {
-        geometry: new THREE.CylinderGeometry(0.78, 0.92, 0.28, 12),
-        material: new THREE.MeshStandardMaterial({ color: '#e9dcc9', roughness: 0.98 }),
-        position: [0, 0.16, 0],
-      },
-      {
-        geometry: new THREE.CylinderGeometry(0.36, 0.48, 0.32, 12),
-        material: new THREE.MeshStandardMaterial({ color: '#f3ebdf', roughness: 0.92 }),
-        position: [0, 0.44, 0],
-      },
-      {
-        geometry: new THREE.CylinderGeometry(0.05, 0.05, 0.4, 10),
-        material: new THREE.MeshStandardMaterial({ color: '#b9dced', roughness: 0.3 }),
-        position: [0, 0.72, 0],
-      },
-    ].forEach((piece) => {
-      const mesh = new THREE.Mesh(piece.geometry, piece.material);
-      mesh.position.set(...piece.position);
-      mesh.castShadow = true;
-      fountain.add(mesh);
-    });
-
-    const kiosk = new THREE.Group();
-    kiosk.position.set(1.05, -0.72, 1.36);
-    root.add(kiosk);
-
-    [
-      {
-        geometry: new THREE.BoxGeometry(0.72, 0.34, 0.38),
-        material: new THREE.MeshStandardMaterial({ color: '#ceb894', roughness: 0.95 }),
-        position: [0, 0.18, 0],
-      },
-      {
-        geometry: new THREE.BoxGeometry(0.42, 0.42, 0.22),
-        material: new THREE.MeshStandardMaterial({ color: '#8c6743', roughness: 0.88 }),
-        position: [0, 0.5, 0],
-      },
-    ].forEach((piece) => {
-      const mesh = new THREE.Mesh(piece.geometry, piece.material);
-      mesh.position.set(...piece.position);
-      mesh.castShadow = true;
-      kiosk.add(mesh);
-    });
-
-    const particleMesh = new THREE.InstancedMesh(
-      new THREE.SphereGeometry(0.14, 5, 5),
-      new THREE.MeshStandardMaterial({ color: '#f6d9e8', roughness: 0.45 }),
-      PARTICLE_COUNT,
-    );
-    updateParticleInstances(particleMesh, particleState, particleDummy);
-    root.add(particleMesh);
-
-    function handleResize() {
-      const width = shellNode?.clientWidth || 1;
-      const height = shellNode?.clientHeight || 1;
-
-      renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-    }
-
-    function handlePointerMove(event) {
-      const bounds = shellNode?.getBoundingClientRect();
-      if (!bounds) {
-        return;
-      }
-
-      pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-      pointer.y = -(((event.clientY - bounds.top) / bounds.height) * 2 - 1);
-    }
-
-    function handlePointerLeave() {
-      pointer.x = 0;
-      pointer.y = 0;
-    }
-
-    function animate() {
-      if (disposed) {
-        return;
-      }
-
-      const delta = Math.min(clock.getDelta(), 0.033);
-      const elapsed = clock.elapsedTime;
-
-      if (burstRef.current !== previousBurst) {
-        previousBurst = burstRef.current;
-        resetParticles(particleState, 0.45);
-      }
-
-      camera.position.x += (pointer.x * 0.4 - camera.position.x) * Math.min(1, delta * 2.6);
-      camera.position.y +=
-        (CAMERA_ORIGIN.y + pointer.y * 0.12 - camera.position.y) * Math.min(1, delta * 2.6);
-      camera.position.z +=
-        (CAMERA_ORIGIN.z - camera.position.z) * Math.min(1, delta * 2.6);
-      camera.lookAt(0, 0.9, 0);
-
-      canopy.rotation.y = Math.sin(elapsed * 0.42) * CANOPY_SWAY_Y;
-      canopy.rotation.z = Math.cos(elapsed * 0.58) * CANOPY_SWAY_Z;
-
-      particleState.forEach((particle, index) => {
         if (particle.delay > 0) {
           particle.delay -= delta;
           return;
         }
 
-        particle.x += particle.vx * delta;
-        particle.y -= particle.vy * delta;
-        particle.z += particle.vz * delta;
-        particle.rotation += particle.spin * delta;
+        particle.life -= delta;
+        particle.position.addScaledVector(particle.velocity, delta);
+        particle.velocity.y -= delta * 0.18;
+        particle.rotation.y += particle.spin * delta;
 
-        if (particle.y < -0.85) {
-          resetParticle(particle, index, 0.45);
-        }
-      });
-
-      updateParticleInstances(particleMesh, particleState, particleDummy);
-      renderer.render(scene, camera);
-      animationFrameId = window.requestAnimationFrame(animate);
-    }
-
-    handleResize();
-    animate();
-
-    window.addEventListener('resize', handleResize);
-    shellNode.addEventListener('pointermove', handlePointerMove);
-    shellNode.addEventListener('pointerleave', handlePointerLeave);
-
-    return () => {
-      disposed = true;
-      window.cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', handleResize);
-      shellNode.removeEventListener('pointermove', handlePointerMove);
-      shellNode.removeEventListener('pointerleave', handlePointerLeave);
-
-      renderer.dispose();
-      scene.traverse((object) => {
-        if (object.geometry) {
-          object.geometry.dispose();
-        }
-
-        if (object.material) {
-          if (Array.isArray(object.material)) {
-            object.material.forEach((material) => material.dispose());
+        if (particle.life <= 0) {
+          if (now < burstStateRef.current.endTime) {
+            resetParticle(
+              particle,
+              burstStateRef.current.anchor,
+              burstStateRef.current.theme,
+            );
           } else {
-            object.material.dispose();
+            particle.active = false;
           }
         }
       });
-    };
-  }, [threeModule]);
+
+      activeParticles = syncParticleInstances(
+        particleMeshRef.current,
+        particleStateRef.current,
+        dummyRef.current,
+      );
+    }
+
+    const nextProjectedWaypoints = WAYPOINTS.map((waypoint) => {
+      projectionVectorRef.current.set(...waypoint.anchor).project(camera);
+
+      return {
+        ...waypoint,
+        x: (projectionVectorRef.current.x * 0.5 + 0.5) * size.width,
+        y: (-projectionVectorRef.current.y * 0.5 + 0.5) * size.height,
+        visible:
+          projectionVectorRef.current.z < 1 &&
+          projectionVectorRef.current.z > -1 &&
+          projectionVectorRef.current.x >= -1.1 &&
+          projectionVectorRef.current.x <= 1.1 &&
+          projectionVectorRef.current.y >= -1.1 &&
+          projectionVectorRef.current.y <= 1.1,
+      };
+    });
+
+    const shouldUpdateProjection = nextProjectedWaypoints.some((item, index) => {
+      const previous = projectedWaypointsRef.current[index];
+
+      return (
+        !previous ||
+        Math.abs(previous.x - item.x) > 0.4 ||
+        Math.abs(previous.y - item.y) > 0.4 ||
+        previous.visible !== item.visible
+      );
+    });
+
+    if (shouldUpdateProjection) {
+      projectedWaypointsRef.current = nextProjectedWaypoints;
+      onProjectWaypoints(nextProjectedWaypoints);
+    }
+
+    const pointerMotion =
+      Math.abs(pointer.x) > 0.001 ||
+      Math.abs(pointer.y) > 0.001 ||
+      camera.position.distanceTo(cameraTargetRef.current) > 0.01;
+
+    if (introProgressRef.current < 1 || activeParticles > 0 || pointerMotion) {
+      invalidate();
+    }
+  });
 
   return (
-    <div ref={shellRef} className={styles.gardenFallbackCanvas}>
-      <canvas ref={canvasRef} className={styles.gardenCanvas} />
-    </div>
+    <>
+      <ambientLight intensity={1.08} />
+      <directionalLight
+        castShadow
+        intensity={1.3}
+        position={[5.6, 9.4, 5.2]}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+      />
+      <directionalLight intensity={0.36} position={[-5, 5, -3]} />
+
+      <group ref={rootRef}>
+        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.08, 0]}>
+          <planeGeometry args={[18, 18]} />
+          <meshStandardMaterial color="#dfe6d7" roughness={1} />
+        </mesh>
+
+        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.04, 1.3]}>
+          <planeGeometry args={[3.2, 10.8]} />
+          <meshStandardMaterial color="#d6c1a2" roughness={0.96} />
+        </mesh>
+
+        {PATH_STONES.map((stone) => (
+          <mesh
+            key={stone.position.join('-')}
+            receiveShadow
+            castShadow
+            position={stone.position}
+            rotation={[-Math.PI / 2, 0, stone.rotation]}
+            scale={[stone.scale, stone.scale * 0.82, 1]}
+          >
+            <cylinderGeometry args={[0.46, 0.52, 0.16, 6]} />
+            <meshStandardMaterial color="#c2ae93" roughness={0.98} />
+          </mesh>
+        ))}
+
+        <group position={[-1.1, -0.02, -1.8]}>
+          <mesh castShadow position={[0, 0.3, 0]}>
+            <cylinderGeometry args={[0.28, 0.46, 2.9, 7]} />
+            <meshStandardMaterial color="#624133" roughness={0.94} />
+          </mesh>
+
+          <mesh
+            castShadow
+            position={[-0.22, 1.55, -0.1]}
+            rotation={[0.8, 0.2, -0.7]}
+            scale={[0.18, 1.6, 0.18]}
+          >
+            <cylinderGeometry args={[0.2, 0.42, 1, 6]} />
+            <meshStandardMaterial color="#6d4938" roughness={0.95} />
+          </mesh>
+
+          <mesh
+            castShadow
+            position={[0.34, 1.72, 0.12]}
+            rotation={[0.7, -0.46, 0.48]}
+            scale={[0.16, 1.42, 0.16]}
+          >
+            <cylinderGeometry args={[0.2, 0.42, 1, 6]} />
+            <meshStandardMaterial color="#6a4737" roughness={0.95} />
+          </mesh>
+
+          <group ref={canopyRef} position={[0, 2.45, 0]}>
+            <instancedMesh
+              ref={blossomMeshRef}
+              args={[undefined, undefined, BLOSSOM_OFFSETS.length]}
+              castShadow
+            >
+              <sphereGeometry args={[0.46, 7, 7]} />
+              <meshStandardMaterial color="#f5c3da" roughness={0.65} />
+            </instancedMesh>
+          </group>
+        </group>
+
+        <group position={[-4.2, -0.74, 1.3]}>
+          <mesh castShadow position={[0, 0.2, 0]}>
+            <boxGeometry args={[1.48, 0.34, 1.32]} />
+            <meshStandardMaterial color="#896444" roughness={0.9} />
+          </mesh>
+          <mesh castShadow position={[0, 0.72, 0]} rotation={[0, Math.PI / 4, 0]}>
+            <coneGeometry args={[1.18, 0.72, 4]} />
+            <meshStandardMaterial color="#c08a5f" roughness={0.82} />
+          </mesh>
+          <mesh castShadow position={[-0.42, 0.56, -0.42]}>
+            <boxGeometry args={[0.16, 0.72, 0.16]} />
+            <meshStandardMaterial color="#6f4e33" roughness={0.94} />
+          </mesh>
+          <mesh castShadow position={[0.42, 0.56, 0.42]}>
+            <boxGeometry args={[0.16, 0.72, 0.16]} />
+            <meshStandardMaterial color="#6f4e33" roughness={0.94} />
+          </mesh>
+        </group>
+
+        <group position={[3.8, -0.76, 0.52]}>
+          <mesh castShadow position={[0, 0.18, 0]}>
+            <cylinderGeometry args={[0.92, 1.08, 0.28, 12]} />
+            <meshStandardMaterial color="#ebddc9" roughness={0.98} />
+          </mesh>
+          <mesh castShadow position={[0, 0.5, 0]}>
+            <cylinderGeometry args={[0.48, 0.62, 0.32, 12]} />
+            <meshStandardMaterial color="#f7eee0" roughness={0.92} />
+          </mesh>
+          <mesh position={[0, 0.84, 0]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.54, 10]} />
+            <meshStandardMaterial color="#b7d8ff" roughness={0.22} metalness={0.06} />
+          </mesh>
+          <mesh position={[0, 1.14, 0]}>
+            <sphereGeometry args={[0.18, 8, 8]} />
+            <meshStandardMaterial color="#d2ebff" roughness={0.2} metalness={0.04} />
+          </mesh>
+        </group>
+
+        <group position={[1.4, -0.72, 3.35]}>
+          <mesh castShadow position={[0, 0.24, 0]}>
+            <boxGeometry args={[0.88, 0.42, 0.62]} />
+            <meshStandardMaterial color="#d5bd96" roughness={0.95} />
+          </mesh>
+          <mesh castShadow position={[0, 0.72, 0]}>
+            <boxGeometry args={[0.52, 0.48, 0.28]} />
+            <meshStandardMaterial color="#8b6541" roughness={0.9} />
+          </mesh>
+          <mesh castShadow position={[0, 1.08, 0]}>
+            <boxGeometry args={[0.82, 0.18, 0.12]} />
+            <meshStandardMaterial color="#f2e8d8" roughness={0.78} />
+          </mesh>
+        </group>
+
+        {SHRUB_POSITIONS.map((position) => (
+          <mesh
+            key={position.join('-')}
+            castShadow
+            position={position}
+            scale={[1.1, 0.74, 0.92]}
+          >
+            <sphereGeometry args={[0.42, 6, 6]} />
+            <meshStandardMaterial color="#86b48f" roughness={0.86} />
+          </mesh>
+        ))}
+
+        <instancedMesh ref={particleMeshRef} args={[undefined, undefined, PARTICLE_COUNT]}>
+          <octahedronGeometry args={[0.14, 0]} />
+          <meshStandardMaterial
+            ref={particleMaterialRef}
+            color="#f6d9e8"
+            roughness={0.45}
+            transparent
+            opacity={0.92}
+          />
+        </instancedMesh>
+      </group>
+    </>
   );
 }
 
-export default function GardenCanvas({ onExit }) {
-  const [rendererState, setRendererState] = useState({
-    mode: 'loading',
-    fiber: null,
-    threeModule: null,
-  });
+export default function GardenCanvas({
+  certifications,
+  projects,
+  timelineItems,
+  reducedMotion = false,
+  onExit,
+  onModalChange,
+}) {
   const [activePanelId, setActivePanelId] = useState(null);
-  const [burstCount, setBurstCount] = useState(0);
-
-  const activePanel = activePanelId ? PANEL_CONTENT[activePanelId] : null;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadRenderer() {
-      try {
-        const [fiber, threeModule] = await Promise.all([
-          import('@react-three/fiber'),
-          import('three'),
-        ]);
-
-        if (!cancelled) {
-          setRendererState({
-            mode: 'r3f',
-            fiber,
-            threeModule,
-          });
-        }
-      } catch (fiberError) {
-        try {
-          const threeModule = await import('three');
-
-          if (!cancelled) {
-            setRendererState({
-              mode: 'three',
-              fiber: null,
-              threeModule,
-            });
-          }
-        } catch {
-          if (!cancelled) {
-            setRendererState({
-              mode: 'fallback',
-              fiber: null,
-              threeModule: null,
-            });
-          }
-        }
-
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('Garden canvas renderer fallback triggered.', fiberError);
-        }
-      }
-    }
-
-    loadRenderer();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [projectedWaypoints, setProjectedWaypoints] = useState(createProjectedWaypoints);
+  const [burstTrigger, setBurstTrigger] = useState({
+    token: 0,
+    anchor: WAYPOINTS[0].anchor,
+    theme: WAYPOINTS[0].theme,
+  });
+  const invalidateRef = useRef(null);
+  const pointerRef = useRef({ x: 0, y: 0 });
+  const projectedWaypointsRef = useRef(createProjectedWaypoints());
 
   useEffect(() => {
-    function handleEscape(event) {
-      if (event.key === 'Escape') {
-        if (activePanelId) {
-          setActivePanelId(null);
-          return;
-        }
+    onModalChange(Boolean(activePanelId));
+  }, [activePanelId, onModalChange]);
 
-        onExit();
-      }
+  function queueRender() {
+    invalidateRef.current?.();
+  }
+
+  function handlePointerMove(event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    pointerRef.current = {
+      x: ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+      y: -(((event.clientY - bounds.top) / bounds.height) * 2 - 1),
+    };
+    queueRender();
+  }
+
+  function handlePointerLeave() {
+    pointerRef.current = { x: 0, y: 0 };
+    queueRender();
+  }
+
+  function triggerBurst(waypointId) {
+    const waypoint = WAYPOINTS.find((item) => item.id === waypointId);
+
+    if (!waypoint) {
+      return;
     }
 
-    window.addEventListener('keydown', handleEscape);
-
-    return () => {
-      window.removeEventListener('keydown', handleEscape);
-    };
-  }, [activePanelId, onExit]);
-
-  function handleOpenPanel(panelId) {
-    setBurstCount((count) => count + 1);
-    setActivePanelId(panelId);
+    setBurstTrigger((currentState) => ({
+      token: currentState.token + 1,
+      anchor: waypoint.anchor,
+      theme: waypoint.theme,
+    }));
   }
 
-  function handlePointerNudge() {
-    setBurstCount((count) => count + 1);
+  function handleWaypointActivate(waypointId) {
+    triggerBurst(waypointId);
+    setActivePanelId(waypointId);
   }
+
+  const activePanel = activePanelId ? PANEL_COPY[activePanelId] : null;
 
   return (
     <div
-      className={clsx(styles.gardenOverlay, {
-        [styles.gardenModalOpen]: Boolean(activePanel),
+      className={clsx(styles.overlay, {
+        [styles.modalOpen]: Boolean(activePanel),
       })}
-      aria-label="Interactive garden canvas"
     >
-      <div className={styles.gardenFrame}>
-        {rendererState.mode === 'r3f' ? (
-          <FiberGarden
-            fiber={rendererState.fiber}
-            threeModule={rendererState.threeModule}
-            burstCount={burstCount}
-          />
-        ) : null}
-
-        {rendererState.mode === 'three' ? (
-          <PlainThreeGarden
-            threeModule={rendererState.threeModule}
-            burstCount={burstCount}
-          />
-        ) : null}
-
-        {rendererState.mode === 'loading' || rendererState.mode === 'fallback' ? (
-          <div className={styles.gardenLoading} aria-live="polite">
-            <span className={styles.loadingOrb} aria-hidden="true" />
-            <span>
-              {rendererState.mode === 'fallback'
-                ? 'Falling back to the 2D shell.'
-                : 'Growing the garden...'}
-            </span>
-          </div>
-        ) : null}
-
-        <div
-          className={clsx(styles.waypointLayer, {
-            [styles.waypointLayerBlocked]: Boolean(activePanel),
-          })}
-        >
-          {WAYPOINTS.map((waypoint) => (
-            <button
-              key={waypoint.id}
-              type="button"
-              className={styles.waypoint}
-              style={waypoint.style}
-              aria-label={waypoint.label}
-              onMouseEnter={handlePointerNudge}
-              onFocus={handlePointerNudge}
-              onClick={() => handleOpenPanel(waypoint.id)}
-            >
-              <span
-                className={styles.waypointDiamond}
-                data-theme={waypoint.theme}
-                aria-hidden="true"
-              />
-              <span className={styles.waypointLabel}>{waypoint.label}</span>
-            </button>
-          ))}
-        </div>
-
+      <div
+        className={styles.frame}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+      >
         <button
           type="button"
           className={styles.exitButton}
           onClick={onExit}
-          aria-label="Return to the hero gate"
+          aria-label="Return to the garden gate"
         >
           Back to gate
         </button>
+
+        <p className={styles.caption} aria-live="polite">
+          Bird&apos;s-eye garden
+        </p>
+
+        <div className={styles.canvasShell}>
+          <Canvas
+            className={styles.canvas}
+            camera={{ position: CAMERA_INTRO_POSITION.toArray(), fov: 36 }}
+            dpr={typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)}
+            frameloop="demand"
+            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+            shadows
+          >
+            <SceneRig
+              pointerRef={pointerRef}
+              burstTrigger={burstTrigger}
+              projectedWaypointsRef={projectedWaypointsRef}
+              onProjectWaypoints={setProjectedWaypoints}
+              reducedMotion={reducedMotion}
+              invalidateRef={invalidateRef}
+            />
+          </Canvas>
+        </div>
+
+        <WaypointOverlay
+          items={projectedWaypoints}
+          activeId={activePanelId}
+          blocked={Boolean(activePanel)}
+          onActivate={handleWaypointActivate}
+          onPreview={triggerBurst}
+        />
       </div>
 
-      {activePanel ? (
-        <div
-          className={styles.modalBackdrop}
-          role="presentation"
-          onClick={() => setActivePanelId(null)}
-        >
-          <div
-            className={styles.modalPanel}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="garden-panel-title"
-            style={PANEL_THEME_STYLES[activePanel.theme]}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              className={styles.modalClose}
-              onClick={() => setActivePanelId(null)}
-              aria-label="Close garden panel"
-            >
-              Close
-            </button>
-            <p className={styles.modalEyebrow}>Waypoint panel</p>
-            <h2 id="garden-panel-title" className={styles.modalTitle}>
-              {activePanel.title}
-            </h2>
-            <p className={styles.modalIntro}>{activePanel.intro}</p>
-            <ul className={styles.modalList}>
-              {activePanel.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : null}
+      <ModalPanel
+        isOpen={Boolean(activePanel)}
+        theme={activePanel?.theme}
+        eyebrow={activePanel?.eyebrow}
+        title={activePanel?.title}
+        intro={activePanel?.intro}
+        onClose={() => setActivePanelId(null)}
+      >
+        {activePanelId === 'certifications' ? (
+          <CertificationGrid items={certifications} />
+        ) : null}
+        {activePanelId === 'projects' ? (
+          <ProjectShowcase items={projects} />
+        ) : null}
+        {activePanelId === 'education' ? (
+          <EducationTimeline items={timelineItems} />
+        ) : null}
+        {activePanelId === 'contact' ? <ContactPanel /> : null}
+      </ModalPanel>
     </div>
   );
 }

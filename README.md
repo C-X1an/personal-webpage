@@ -5,7 +5,7 @@
 - npm
 
 ## Local development
-1. Create `.env.local` from `.env.example` and set `FORMSPREE_ENDPOINT`.
+1. Create `.env.local` from `.env.example` and set `NEXT_PUBLIC_FORMSPREE_ENDPOINT`.
 2. Install dependencies with `npm install`.
 3. Start the dev server with `npm run dev`.
 4. Open `http://localhost:3000`.
