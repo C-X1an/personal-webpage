@@ -5,13 +5,13 @@
   display: grid;
   place-items: center;
   padding: clamp(16px, 2vw, 28px);
-  background: rgba(6, 19, 39, 0.42);
-  backdrop-filter: blur(18px);
+  background: rgba(6, 19, 39, 0.52);
+  backdrop-filter: blur(18px) saturate(0.7);
 }
 
 .dialog {
-  width: min(78vw, 1100px);
-  height: min(80vh, 900px);
+  width: min(80vw, 1180px);
+  height: min(80vh, 920px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 22px;
@@ -20,7 +20,7 @@
   border-radius: 28px;
   color: var(--panel-text, #081123);
   background: var(--panel-bg, rgba(255, 255, 255, 0.95));
-  box-shadow: 0 36px 96px rgba(6, 19, 39, 0.28);
+  box-shadow: 0 28px 74px rgba(6, 19, 39, 0.22);
   overflow: hidden;
 }
 
@@ -73,7 +73,7 @@
 }
 
 .closeButton:hover {
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.01);
   background: rgba(255, 255, 255, 0.46);
   box-shadow: 0 10px 24px rgba(8, 17, 35, 0.08);
 }
@@ -116,12 +116,12 @@
 }
 
 .themeSpring {
-  --panel-bg: rgba(233, 245, 234, 0.97);
-  --panel-border: rgba(60, 88, 63, 0.14);
-  --panel-text: #102119;
-  --panel-muted: rgba(16, 33, 25, 0.68);
-  --panel-muted-strong: rgba(16, 33, 25, 0.84);
-  --panel-soft-border: rgba(16, 33, 25, 0.18);
+  --panel-bg: rgba(247, 228, 190, 0.97);
+  --panel-border: rgba(120, 77, 20, 0.14);
+  --panel-text: #2f1a07;
+  --panel-muted: rgba(47, 26, 7, 0.68);
+  --panel-muted-strong: rgba(47, 26, 7, 0.84);
+  --panel-soft-border: rgba(47, 26, 7, 0.18);
 }
 
 .themeFountain {
@@ -131,6 +131,15 @@
   --panel-muted: rgba(13, 32, 52, 0.72);
   --panel-muted-strong: rgba(13, 32, 52, 0.84);
   --panel-soft-border: rgba(13, 32, 52, 0.18);
+}
+
+.themePlayground {
+  --panel-bg: rgba(247, 237, 222, 0.97);
+  --panel-border: rgba(107, 74, 31, 0.14);
+  --panel-text: #2d1d0f;
+  --panel-muted: rgba(45, 29, 15, 0.68);
+  --panel-muted-strong: rgba(45, 29, 15, 0.84);
+  --panel-soft-border: rgba(45, 29, 15, 0.18);
 }
 
 .themeWarm {

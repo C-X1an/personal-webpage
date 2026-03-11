@@ -8,6 +8,7 @@ const THEME_CLASSNAMES = {
   sakura: styles.themeSakura,
   spring: styles.themeSpring,
   fountain: styles.themeFountain,
+  playground: styles.themePlayground,
   warm: styles.themeWarm,
 };
 

@@ -102,7 +102,9 @@ export default function HomePage({ certifications, projects, timelineItems }) {
 
   useEffect(() => {
     if (isDesktopViewport) {
-      return;
+      loadGardenCanvas();
+      setShouldMountGarden(true);
+      return undefined;
     }
 
     clearAnimation(animationFrameRef);
@@ -147,6 +149,7 @@ export default function HomePage({ certifications, projects, timelineItems }) {
   function preloadGarden() {
     if (isDesktopViewport) {
       loadGardenCanvas();
+      setShouldMountGarden(true);
     }
   }
 
@@ -166,7 +169,6 @@ export default function HomePage({ certifications, projects, timelineItems }) {
 
     clearAnimation(animationFrameRef);
     preloadGarden();
-    setShouldMountGarden(true);
 
     if (prefersReducedMotion) {
       setHeroZoomProgress(1);
@@ -205,7 +207,6 @@ export default function HomePage({ certifications, projects, timelineItems }) {
   function handleCloseGarden() {
     clearAnimation(animationFrameRef);
     setIsModalOpen(false);
-    setShouldMountGarden(false);
     setHeroZoomProgress(0);
     setHeroPhase('idle');
 

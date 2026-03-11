@@ -11,8 +11,8 @@
       "notes": "2026-03-10T23:22:22+08:00: scaffold committed and pushed in d785e6a after npm install, lint, build, and test passed. Follow-up: bump Next.js from 15.5.2 to the latest 15.x patch release in a reviewed diff."
     },
     "task_03_create_pages_index_and_hero": {
-      "status": "done",
-      "notes": "2026-03-11T21:06:29.1961096+08:00: rebuilt pages/index into a fixed desktop gate entry with the lowercase free ticket CTA, full-viewport hero framing, desktop scroll lock, and a scrollable 2D mobile fallback that reuses the same content modules."
+      "status": "in_progress",
+      "notes": "2026-03-12T01:05:00+08:00: hero/layout/interaction polish is implemented and local validation passed (`npm ci`, `npm run lint`, `npm run build`, `npm test`, plus `npm run start` smoke checks returning 200 for `/` and `/?view=garden`). Remaining step: human/browser verification of the final Vercel preview URL before marking done and recording the push SHA."
     },
     "task_04_refine_hero_zoom_and_garden_camera": {
       "status": "done",

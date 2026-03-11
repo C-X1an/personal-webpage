@@ -3,7 +3,7 @@ import { useState } from 'react';
 import DetailModal from './DetailModal';
 import styles from '../styles/ContentPanels.module.css';
 
-export default function EducationTimeline({ items = [] }) {
+export default function EducationTimeline({ items = [], theme = 'fountain' }) {
   const [activeItemId, setActiveItemId] = useState(null);
   const activeItem = items.find((item) => item.id === activeItemId) || null;
 
@@ -35,7 +35,7 @@ export default function EducationTimeline({ items = [] }) {
 
       <DetailModal
         isOpen={Boolean(activeItem)}
-        theme="fountain"
+        theme={theme}
         eyebrow={activeItem?.kind === 'job' ? 'Work timeline' : 'Education timeline'}
         title={activeItem?.title}
         subtitle={activeItem?.dateLabel}

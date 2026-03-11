@@ -190,150 +190,132 @@ export default function ContactPanel() {
 
   return (
     <div className={styles.contactShell}>
-      <div className={styles.contactGrid}>
-        <section className={styles.contactCard} aria-labelledby="contact-panel-title">
-          <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>Contact kiosk</p>
-            <h3 id="contact-panel-title" className={styles.title}>
-              Send a note without leaving the garden.
-            </h3>
-            <p className={styles.lead}>
-              Formspree handles delivery on the client side. If the request fails,
-              the panel falls back to a mail draft and direct profile links.
-            </p>
-          </div>
+      <section className={styles.contactCard} aria-labelledby="contact-panel-title">
+        <div className={styles.sectionHeader}>
+          <p className={styles.eyebrow}>Contact kiosk</p>
+          <h3 id="contact-panel-title" className={styles.title}>
+            Send a note without leaving the garden.
+          </h3>
+          <p className={styles.lead}>
+            Formspree handles delivery on the client side. If the request fails,
+            the panel falls back to a mail draft and direct profile links.
+          </p>
+        </div>
 
-          <form className={styles.form} onSubmit={handleSubmit} noValidate>
-            <label className={styles.field}>
-              <span>Name (optional)</span>
-              <input
-                type="text"
-                name="name"
-                value={values.name}
-                onChange={handleChange}
-                autoComplete="name"
-                aria-label="Name"
-              />
-            </label>
+        <div className={styles.socialList}>
+          <a
+            href="https://github.com/C-X1an"
+            target="_blank"
+            rel="noreferrer"
+            className={styles.socialLink}
+          >
+            <GithubIcon className={styles.socialIcon} />
+            <span className={styles.socialText}>
+              <span className={styles.socialTitle}>GitHub</span>
+              <span className={styles.socialLabel}>github.com/C-X1an</span>
+            </span>
+          </a>
 
-            <label className={styles.field}>
-              <span>Email</span>
-              <input
-                type="email"
-                name="email"
-                value={values.email}
-                onChange={handleChange}
-                autoComplete="email"
-                required
-                aria-invalid={Boolean(errors.email)}
-                aria-describedby={errors.email ? 'contact-email-error' : undefined}
-              />
-              {errors.email ? (
-                <p id="contact-email-error" className={styles.fieldError}>
-                  {errors.email}
-                </p>
-              ) : null}
-            </label>
+          <a href={mailtoHref} className={styles.socialLink}>
+            <MailIcon className={styles.socialIcon} />
+            <span className={styles.socialText}>
+              <span className={styles.socialTitle}>Email draft</span>
+              <span className={styles.socialLabel}>Open a prepared message</span>
+            </span>
+          </a>
 
-            <label className={styles.field}>
-              <span>Message</span>
-              <textarea
-                name="message"
-                value={values.message}
-                onChange={handleChange}
-                rows="6"
-                required
-                aria-invalid={Boolean(errors.message)}
-                aria-describedby={errors.message ? 'contact-message-error' : undefined}
-              />
-              {errors.message ? (
-                <p id="contact-message-error" className={styles.fieldError}>
-                  {errors.message}
-                </p>
-              ) : null}
-            </label>
+          <a
+            href="/api/asset/resume/Chong_Xian_resume.pdf"
+            className={styles.socialLink}
+            download
+          >
+            <ResumeIcon className={styles.socialIcon} />
+            <span className={styles.socialText}>
+              <span className={styles.socialTitle}>Resume</span>
+              <span className={styles.socialLabel}>Download PDF</span>
+            </span>
+          </a>
+        </div>
 
-            <div className={styles.submitRow}>
-              <button
-                type="submit"
-                className={styles.submitButton}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Sending...' : 'Send message'}
-              </button>
-              <a href={mailtoHref} className={styles.subtleLink}>
-                Open mail draft
-              </a>
-            </div>
-          </form>
+        <form className={styles.form} onSubmit={handleSubmit} noValidate>
+          <label className={styles.field}>
+            <span>Name (optional)</span>
+            <input
+              type="text"
+              name="name"
+              value={values.name}
+              onChange={handleChange}
+              autoComplete="name"
+              aria-label="Name"
+            />
+          </label>
 
-          {toast ? (
-            <p
-              className={`${styles.toast} ${
-                toast.tone === 'success' ? styles.toastSuccess : styles.toastError
-              }`}
-              role={toast.tone === 'error' ? 'alert' : 'status'}
-              aria-live="polite"
-            >
-              {toast.message}
-            </p>
-          ) : null}
-        </section>
-
-        <aside className={styles.socialStack} aria-label="Contact links">
-          <div className={styles.socialCard}>
-            <div className={styles.sectionHeader}>
-              <p className={styles.eyebrow}>Elsewhere</p>
-              <p className={styles.lead}>
-                GitHub, resume access, and a direct mail draft stay reachable from
-                the same panel.
+          <label className={styles.field}>
+            <span>Email</span>
+            <input
+              type="email"
+              name="email"
+              value={values.email}
+              onChange={handleChange}
+              autoComplete="email"
+              required
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'contact-email-error' : undefined}
+            />
+            {errors.email ? (
+              <p id="contact-email-error" className={styles.fieldError}>
+                {errors.email}
               </p>
-            </div>
+            ) : null}
+          </label>
 
-            <div className={styles.socialList}>
-              <a
-                href="https://github.com/C-X1an"
-                target="_blank"
-                rel="noreferrer"
-                className={styles.socialLink}
-              >
-                <GithubIcon className={styles.socialIcon} />
-                <span className={styles.socialText}>
-                  <span className={styles.socialTitle}>GitHub</span>
-                  <span className={styles.socialLabel}>github.com/C-X1an</span>
-                </span>
-              </a>
+          <label className={styles.field}>
+            <span>Message</span>
+            <textarea
+              name="message"
+              value={values.message}
+              onChange={handleChange}
+              rows="6"
+              required
+              aria-invalid={Boolean(errors.message)}
+              aria-describedby={errors.message ? 'contact-message-error' : undefined}
+            />
+            {errors.message ? (
+              <p id="contact-message-error" className={styles.fieldError}>
+                {errors.message}
+              </p>
+            ) : null}
+          </label>
 
-              <a href={mailtoHref} className={styles.socialLink}>
-                <MailIcon className={styles.socialIcon} />
-                <span className={styles.socialText}>
-                  <span className={styles.socialTitle}>Email draft</span>
-                  <span className={styles.socialLabel}>Open a prepared message</span>
-                </span>
-              </a>
-
-              <a
-                href="/api/asset/resume/Chong_Xian_resume.pdf"
-                className={styles.socialLink}
-                download
-              >
-                <ResumeIcon className={styles.socialIcon} />
-                <span className={styles.socialText}>
-                  <span className={styles.socialTitle}>Resume</span>
-                  <span className={styles.socialLabel}>Download PDF</span>
-                </span>
-              </a>
-            </div>
+          <div className={styles.submitRow}>
+            <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+              {isSubmitting ? 'Sending...' : 'Send message'}
+            </button>
+            <a href={mailtoHref} className={styles.subtleLink}>
+              Open mail draft
+            </a>
           </div>
+        </form>
 
-          {!endpoint ? (
-            <p className={styles.fallbackNote}>
-              Set <code>NEXT_PUBLIC_FORMSPREE_ENDPOINT</code> in the environment
-              to activate live form delivery.
-            </p>
-          ) : null}
-        </aside>
-      </div>
+        {toast ? (
+          <p
+            className={`${styles.toast} ${
+              toast.tone === 'success' ? styles.toastSuccess : styles.toastError
+            }`}
+            role={toast.tone === 'error' ? 'alert' : 'status'}
+            aria-live="polite"
+          >
+            {toast.message}
+          </p>
+        ) : null}
+
+        {!endpoint ? (
+          <p className={styles.fallbackNote}>
+            Set <code>NEXT_PUBLIC_FORMSPREE_ENDPOINT</code> in the environment to
+            activate live form delivery.
+          </p>
+        ) : null}
+      </section>
     </div>
   );
 }

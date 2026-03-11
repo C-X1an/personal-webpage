@@ -29,16 +29,18 @@ export default function ProjectShowcase({ items = [] }) {
       <div className={styles.projectGrid}>
         {items.map((project) => (
           <article key={project.id} className={styles.projectCard}>
-            <div className={styles.projectVisual} aria-hidden="true">
-              {project.thumbnailSrc ? (
-                <Image
-                  src={project.thumbnailSrc}
-                  alt={`${project.title} project preview`}
-                  fill
-                  sizes="(max-width: 720px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-              ) : null}
-            </div>
+            {project.thumbnailSrc ? (
+              <div className={styles.projectAccentRow}>
+                <div className={styles.projectLogoBadge} aria-hidden="true">
+                  <Image
+                    src={project.thumbnailSrc}
+                    alt={`${project.title} project preview`}
+                    fill
+                    sizes="88px"
+                  />
+                </div>
+              </div>
+            ) : null}
 
             <div className={styles.cardMeta}>
               <h3 className={styles.cardTitle}>{project.title}</h3>
@@ -80,7 +82,7 @@ export default function ProjectShowcase({ items = [] }) {
 
       <DetailModal
         isOpen={Boolean(activeProject)}
-        theme="spring"
+        theme="playground"
         eyebrow="Playground build"
         title={activeProject?.title}
         subtitle={activeProject?.primary_language}
@@ -93,26 +95,36 @@ export default function ProjectShowcase({ items = [] }) {
               rel="noreferrer"
               className={styles.actionLink}
             >
-              View on GitHub
+              Open GitHub in new tab
             </a>
           ) : null
         }
       >
         <div className={styles.detailStack}>
           {activeProject?.thumbnailSrc ? (
-            <div className={styles.detailMediaFrame}>
+            <div className={styles.detailMediaFrameSmall}>
               <Image
                 src={activeProject.thumbnailSrc}
                 alt={`${activeProject.title} project preview`}
                 fill
                 className={styles.detailMedia}
-                sizes="(max-width: 900px) 100vw, 60vw"
+                sizes="180px"
               />
             </div>
           ) : null}
 
           <div className={styles.detailText}>
             <p className={styles.detailSummary}>{activeProject?.description}</p>
+            {activeProject?.repo_url ? (
+              <a
+                href={activeProject.repo_url}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.subtleLink}
+              >
+                {activeProject.repo_url}
+              </a>
+            ) : null}
             <div className={styles.tagList}>
               {(activeProject?.tags || []).map((tag) => (
                 <span key={`${activeProject?.id}-${tag}`} className={styles.tag}>

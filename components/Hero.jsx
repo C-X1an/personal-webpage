@@ -22,9 +22,9 @@ export default function Hero({
   isDesktop = false,
 }) {
   const phaseClassName = getHeroPhaseClassName(phase);
-  const imageScale = 1 + zoomProgress * 2.7;
-  const imageTranslateY = zoomProgress * 16;
-  const imageTranslateX = zoomProgress * 1.2;
+  const imageScale = 1 + zoomProgress * 2.95;
+  const imageTranslateY = zoomProgress * 14;
+  const imageTranslateX = zoomProgress * 0.45;
   const scrimOpacity = 0.18 + (1 - zoomProgress) * 0.18;
   const bloomOpacity = 0.28 + zoomProgress * 0.34;
   const veilOpacity = 0.08 + zoomProgress * 0.34;
@@ -43,8 +43,9 @@ export default function Hero({
           alt="Garden gate illustration for Chong Xian's portfolio"
           className={styles.image}
           style={{
-            objectFit: isDesktop ? 'contain' : 'cover',
-            objectPosition: isDesktop ? '50% 50%' : '50% 46%',
+            objectFit: 'cover',
+            objectPosition: isDesktop ? '50% 48%' : '50% 46%',
+            transformOrigin: '50% 57%',
             transform: `translate3d(${imageTranslateX}%, ${imageTranslateY}%, 0) scale(${imageScale})`,
             filter: `saturate(${1 + zoomProgress * 0.14}) brightness(${1 + zoomProgress * 0.08})`,
           }}

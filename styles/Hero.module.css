@@ -19,6 +19,8 @@
   overflow: hidden;
   isolation: isolate;
   background: #08111b;
+  --gate-x: 50%;
+  --gate-y: 57%;
 }
 
 .heroMedia {
@@ -30,8 +32,8 @@
 }
 
 .image {
-  object-position: 50% 50%;
-  transform-origin: 50% 50%;
+  object-position: 50% 48%;
+  transform-origin: var(--gate-x) var(--gate-y);
   transform: scale(1);
   will-change: transform, filter, opacity;
 }
@@ -52,20 +54,20 @@
 
 .gateBloom {
   background:
-    radial-gradient(circle at 50% 50%, rgba(255, 240, 221, 0.34), rgba(255, 240, 221, 0.14) 16%, transparent 42%),
-    radial-gradient(circle at 50% 58%, rgba(245, 198, 220, 0.18), transparent 28%);
+    radial-gradient(circle at var(--gate-x) var(--gate-y), rgba(255, 240, 221, 0.34), rgba(255, 240, 221, 0.14) 16%, transparent 42%),
+    radial-gradient(circle at var(--gate-x) calc(var(--gate-y) + 1%), rgba(245, 198, 220, 0.18), transparent 28%);
   mix-blend-mode: screen;
 }
 
 .transitionVeil {
   background:
-    radial-gradient(circle at 50% 50%, transparent 0%, transparent 14%, rgba(8, 17, 27, 0.08) 28%, rgba(8, 17, 27, 0.3) 100%);
+    radial-gradient(circle at var(--gate-x) var(--gate-y), transparent 0%, transparent 14%, rgba(8, 17, 27, 0.08) 28%, rgba(8, 17, 27, 0.3) 100%);
 }
 
 .heroGate {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: var(--gate-x);
+  top: var(--gate-y);
   display: grid;
   place-items: center;
   transform: translate(-50%, -50%);
@@ -74,7 +76,7 @@
 .ticketButton {
   min-width: clamp(164px, 16vw, 204px);
   min-height: 56px;
-  padding: 14px 22px;
+  padding: 14px 24px;
   border: 1px solid rgba(113, 76, 93, 0.28);
   border-radius: 0;
   background:
@@ -93,7 +95,8 @@
     transform 220ms ease,
     box-shadow 220ms ease,
     opacity 220ms ease,
-    background-color 220ms ease;
+    background-color 220ms ease,
+    outline-color 220ms ease;
 }
 
 .ticketButton:hover:not(:disabled) {
@@ -105,6 +108,11 @@
 
 .ticketButton:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.ticketButton:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.88);
+  outline-offset: 4px;
 }
 
 .ticketButton:disabled {
@@ -228,13 +236,13 @@
     min-height: 640px;
   }
 
+  .hero {
+    --gate-y: 60%;
+  }
+
   .image {
     object-fit: cover;
     object-position: 50% 46%;
-  }
-
-  .heroGate {
-    top: 60%;
   }
 
   .mobileContentSection {

@@ -19,6 +19,7 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 ---
 
 ## In-progress tasks
+- `task_03_create_pages_index_and_hero`: implementation and local validation are complete; remaining step is the requested browser/Vercel preview verification for hero framing, single-stage zoom, waypoint placement, and modal polish before the task can be marked done.
 - `task_14_build_and_deploy_vercel_config`: build is ready and `origin/main` push will trigger the Vercel deployment; preview URL is pending the remote deployment result.
 
 ---
@@ -43,6 +44,10 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 To resume, open the repo and run `git status`, then run `npm run dev`. Codex will read `codex_state.json` and continue from `last_completed_task`.
 
 ## Session log
+2026-03-12T01:05:00+08:00: Implemented the requested Task 03 polish pass locally. Delivered: desktop hero reframed around the full gate with an uppercase rectangular `FREE TICKET` CTA, persistent desktop canvas mounting for a single-stage gate-to-garden handoff, revised garden camera/waypoint layout with separate education and work entries, tighter themed modal/dialog styling, smaller project logo accents, and a full-width contact panel with GitHub/email/resume links inside the form panel. Validation summary: `npm ci`, `npm run lint`, `npm run build`, and `npm test` all passed; a production `npm run start` smoke check returned `200` for `/` and `/?view=garden`. Remaining blocker: I could not complete the requested browser-based Vercel preview verification from this sandbox, so preview URL and final visual pass remain pending.
+
+2026-03-12T00:00:00+08:00: Re-opened `task_03_create_pages_index_and_hero` for the requested hero/layout/interaction polish pass. Current scope: keep the full gate visible in the desktop hero, center an uppercase rectangular `FREE TICKET` CTA on the gate, collapse the gate-to-garden handoff into one smooth zoom while the desktop canvas renders immediately, retune waypoint sizing/placement and themed modals, remove the birds-eye control, and re-verify lint/build/test before pushing a fresh preview.
+
 2026-03-10T22:59:18+08:00: Started `task_02_create_package_json_and_scaffold` after reading the required project docs, content YAML, design tokens, checkpoint files, and waypoint reference image. Current session scope is limited to the initial Next.js Pages Router scaffold, package/config files, and an accessible hero/contact placeholder implementation so the human can review a clean atomic diff before any install, build, or commit step.
 
 2026-03-10T23:22:22+08:00: Completed `task_02_create_package_json_and_scaffold`. Commit `d785e6a` was pushed to `origin/main` after `npm install`, `npm run lint`, `npm run build`, and `npm test` passed. Build status: passed. Preview URL: not deployed. Assets downloaded: none.
