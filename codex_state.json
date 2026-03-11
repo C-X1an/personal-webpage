@@ -12,7 +12,7 @@
     },
     "task_03_create_pages_index_and_hero": {
       "status": "in_progress",
-      "notes": "2026-03-12T01:05:00+08:00: hero/layout/interaction polish is implemented and local validation passed (`npm ci`, `npm run lint`, `npm run build`, `npm test`, plus `npm run start` smoke checks returning 200 for `/` and `/?view=garden`). Remaining step: human/browser verification of the final Vercel preview URL before marking done and recording the push SHA."
+      "notes": "2026-03-12T01:05:00+08:00: hero/layout/interaction polish is implemented in commit 11a921d and pushed to origin/main. Local validation passed (`npm ci`, `npm run lint`, `npm run build`, `npm test`, plus `npm run start` smoke checks returning 200 for `/` and `/?view=garden`). Remaining step: human/browser verification of the final Vercel preview URL before marking done."
     },
     "task_04_refine_hero_zoom_and_garden_camera": {
       "status": "done",
