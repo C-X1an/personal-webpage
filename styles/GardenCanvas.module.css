@@ -1,18 +1,24 @@
 .overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 20;
-  background:
-    radial-gradient(circle at top, rgba(255, 245, 232, 0.24), transparent 30%),
-    linear-gradient(180deg, rgba(226, 238, 229, 0.98), rgba(205, 226, 218, 0.99));
+  z-index: 10;
+  opacity: 0;
+  transform: scale(1.08);
+  filter: blur(14px) saturate(0.94);
+  transition:
+    opacity 640ms ease,
+    transform 1400ms cubic-bezier(0.16, 0.88, 0.2, 1),
+    filter 780ms ease;
 }
 
-.modalOpen .frame {
-  pointer-events: none;
+.entering,
+.open {
+  opacity: 1;
 }
 
-.modalOpen .exitButton,
-.modalOpen .caption {
+.open {
+  transform: scale(1);
+  filter: none;
   pointer-events: auto;
 }
 
@@ -23,7 +29,20 @@
   overflow: hidden;
 }
 
+.frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at top, rgba(255, 248, 236, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(228, 236, 228, 0.76), rgba(205, 221, 210, 0.9));
+  pointer-events: none;
+}
+
 .canvasShell {
+  position: relative;
+  z-index: 2;
   width: 100%;
   height: 100%;
 }
@@ -34,58 +53,61 @@
   display: block;
 }
 
-.caption {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  z-index: 5;
-  padding: 12px 16px;
-  border-radius: 16px;
-  background: rgba(255, 251, 246, 0.76);
-  color: #19334c;
-  font-size: 0.9rem;
-  font-weight: 700;
-  box-shadow: 0 18px 34px rgba(8, 17, 35, 0.12);
-  backdrop-filter: blur(12px);
-}
-
 .exitButton {
   position: absolute;
   top: 24px;
   left: 24px;
-  z-index: 7;
+  z-index: 8;
   min-height: 44px;
   padding: 10px 16px;
-  border: 1px solid rgba(8, 17, 35, 0.12);
+  border: 1px solid rgba(8, 17, 35, 0.14);
   border-radius: 14px;
-  background: rgba(255, 251, 246, 0.82);
+  background: rgba(255, 251, 246, 0.76);
   color: #132436;
   font-weight: 700;
-  box-shadow: 0 18px 34px rgba(8, 17, 35, 0.12);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 32px rgba(8, 17, 35, 0.12);
+  backdrop-filter: blur(14px);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    opacity 220ms ease;
 }
 
-.loadingState {
+.exitButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 36px rgba(8, 17, 35, 0.14);
+}
+
+.exitButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.sceneDimmer {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  color: #132436;
-  font-weight: 700;
+  z-index: 6;
+  background: rgba(7, 17, 27, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms ease;
 }
 
-@media (max-width: 900px) {
+.modalOpen .frame {
+  pointer-events: none;
+}
+
+.modalOpen .sceneDimmer {
+  opacity: 1;
+}
+
+@media (max-width: 959px) {
   .overlay {
     display: none;
   }
 }
 
 @media (max-width: 720px) {
-  .caption {
-    top: 16px;
-    right: 16px;
-  }
-
   .exitButton {
     top: 16px;
     left: 16px;

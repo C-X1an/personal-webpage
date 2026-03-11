@@ -7,7 +7,6 @@ export default function WaypointOverlay({
   activeId = null,
   blocked = false,
   onActivate,
-  onPreview,
 }) {
   return (
     <div
@@ -23,6 +22,8 @@ export default function WaypointOverlay({
           className={clsx(styles.marker, {
             [styles.hidden]: !item.visible,
             [styles.active]: activeId === item.id,
+            [styles.sideLeft]: item.side === 'left',
+            [styles.sideRight]: item.side !== 'left',
           })}
           style={{
             left: `${item.x}px`,
@@ -31,9 +32,11 @@ export default function WaypointOverlay({
             '--waypoint-label': item.labelColor,
             '--waypoint-ink': item.inkColor,
           }}
-          onMouseEnter={() => onPreview(item.id)}
-          onFocus={() => onPreview(item.id)}
           onClick={() => onActivate(item.id)}
+          disabled={blocked || !item.visible}
+          tabIndex={blocked || !item.visible ? -1 : 0}
+          aria-expanded={activeId === item.id}
+          aria-haspopup="dialog"
           aria-label={item.label}
         >
           <span className={styles.diamond} aria-hidden="true" />

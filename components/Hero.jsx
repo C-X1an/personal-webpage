@@ -6,8 +6,7 @@ import styles from '../styles/Hero.module.css';
 
 export const HERO_PHASE_CLASSES = {
   idle: '',
-  zooming: 'zooming',
-  holding: 'holding',
+  entering: 'entering',
   open: 'open',
 };
 
@@ -15,7 +14,12 @@ export function getHeroPhaseClassName(phase = 'idle') {
   return HERO_PHASE_CLASSES[phase] || '';
 }
 
-export default function Hero({ onTicketClick, phase = 'idle' }) {
+export default function Hero({
+  onTicketClick,
+  onTicketIntent,
+  phase = 'idle',
+  isDesktop = false,
+}) {
   const phaseClassName = getHeroPhaseClassName(phase);
 
   return (
@@ -38,17 +42,23 @@ export default function Hero({ onTicketClick, phase = 'idle' }) {
       </div>
 
       <div className={styles.scrim} aria-hidden="true" />
-      <div className={styles.lens} aria-hidden="true" />
+      <div className={styles.gateBloom} aria-hidden="true" />
+      <div className={styles.transitionVeil} aria-hidden="true" />
 
-      <div className={styles.heroCenter}>
+      <div className={styles.heroGate}>
         <button
           type="button"
           className={styles.ticketButton}
           onClick={onTicketClick}
+          onMouseEnter={isDesktop ? onTicketIntent : undefined}
+          onFocus={isDesktop ? onTicketIntent : undefined}
+          aria-controls={isDesktop ? 'desktop-garden' : 'mobile-content'}
+          aria-expanded={isDesktop && phase === 'open'}
+          aria-haspopup={isDesktop ? 'dialog' : undefined}
           aria-label="Enter Chong Xian's garden with the free ticket"
-          disabled={phase !== 'idle'}
+          disabled={isDesktop && phase !== 'idle'}
         >
-          Free ticket
+          free ticket
         </button>
       </div>
     </section>

@@ -12,7 +12,7 @@ export default function EducationPage({ timelineItems }) {
         <title>Chong Xian | Education and Work</title>
         <meta
           name="description"
-          content="Evenly spaced education and work timeline for Chong Xian's portfolio."
+          content="Newest-first education and work timeline for Chong Xian's portfolio."
         />
       </Head>
 
@@ -22,8 +22,8 @@ export default function EducationPage({ timelineItems }) {
             <p className={styles.eyebrow}>Fountain timeline</p>
             <h1 className={styles.title}>Education and work</h1>
             <p className={styles.lead}>
-              This route mirrors the fountain panel with a readable, evenly
-              spaced timeline that works without the 3D scene.
+              This route mirrors the fountain panel with a newest-first timeline
+              that opens bullet details on demand without the 3D scene.
             </p>
             <nav className={styles.pageNav} aria-label="Education page navigation">
               <Link href="/" className={styles.pageNavLink}>

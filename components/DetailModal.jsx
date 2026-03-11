@@ -1,7 +1,8 @@
 import clsx from 'clsx';
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
-import styles from '../styles/ModalPanel.module.css';
+import styles from '../styles/DetailModal.module.css';
 
 const THEME_CLASSNAMES = {
   sakura: styles.themeSakura,
@@ -22,20 +23,21 @@ function getFocusableElements(node) {
   );
 }
 
-export default function ModalPanel({
+export default function DetailModal({
   isOpen,
   theme = 'sakura',
   eyebrow,
   title,
-  intro,
+  subtitle,
   onClose,
+  actions,
   children,
 }) {
   const dialogRef = useRef(null);
   const closeButtonRef = useRef(null);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || typeof document === 'undefined') {
       return undefined;
     }
 
@@ -49,6 +51,7 @@ export default function ModalPanel({
 
       if (event.key === 'Escape') {
         event.preventDefault();
+        event.stopPropagation();
         onClose();
         return;
       }
@@ -61,6 +64,7 @@ export default function ModalPanel({
 
       if (focusableElements.length === 0) {
         event.preventDefault();
+        event.stopPropagation();
         return;
       }
 
@@ -69,9 +73,11 @@ export default function ModalPanel({
 
       if (event.shiftKey && document.activeElement === firstElement) {
         event.preventDefault();
+        event.stopPropagation();
         lastElement.focus();
       } else if (!event.shiftKey && document.activeElement === lastElement) {
         event.preventDefault();
+        event.stopPropagation();
         firstElement.focus();
       }
     }
@@ -84,30 +90,30 @@ export default function ModalPanel({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) {
+  if (!isOpen || typeof document === 'undefined') {
     return null;
   }
 
-  return (
+  return createPortal(
     <div className={styles.backdrop} role="presentation" onClick={onClose}>
       <section
         ref={dialogRef}
         className={clsx(styles.dialog, THEME_CLASSNAMES[theme])}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="garden-modal-title"
-        aria-describedby="garden-modal-intro"
+        aria-labelledby="detail-modal-title"
+        aria-describedby={subtitle ? 'detail-modal-subtitle' : undefined}
         onClick={(event) => event.stopPropagation()}
       >
         <header className={styles.header}>
           <div className={styles.copy}>
             {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
-            <h2 id="garden-modal-title" className={styles.title}>
+            <h3 id="detail-modal-title" className={styles.title}>
               {title}
-            </h2>
-            {intro ? (
-              <p id="garden-modal-intro" className={styles.intro}>
-                {intro}
+            </h3>
+            {subtitle ? (
+              <p id="detail-modal-subtitle" className={styles.subtitle}>
+                {subtitle}
               </p>
             ) : null}
           </div>
@@ -117,14 +123,17 @@ export default function ModalPanel({
             type="button"
             className={styles.closeButton}
             onClick={onClose}
-            aria-label="Close panel"
+            aria-label="Close detail dialog"
           >
             Close
           </button>
         </header>
 
         <div className={styles.body}>{children}</div>
+
+        {actions ? <footer className={styles.footer}>{actions}</footer> : null}
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

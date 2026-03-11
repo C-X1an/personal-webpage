@@ -1,26 +1,27 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 60;
   display: grid;
   place-items: center;
-  padding: clamp(16px, 2vw, 28px);
-  background: rgba(6, 19, 39, 0.42);
-  backdrop-filter: blur(18px);
+  padding: 16px;
+  background: rgba(8, 17, 27, 0.4);
+  backdrop-filter: blur(14px);
 }
 
 .dialog {
-  width: min(78vw, 1100px);
-  height: min(80vh, 900px);
+  width: min(64vw, 840px);
+  max-width: calc(100vw - 24px);
+  max-height: min(78vh, 760px);
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 22px;
-  padding: 24px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 18px;
+  padding: 22px;
   border: 1px solid var(--panel-border, rgba(8, 17, 35, 0.1));
-  border-radius: 28px;
+  border-radius: 24px;
   color: var(--panel-text, #081123);
-  background: var(--panel-bg, rgba(255, 255, 255, 0.95));
-  box-shadow: 0 36px 96px rgba(6, 19, 39, 0.28);
+  background: var(--panel-bg, rgba(255, 255, 255, 0.97));
+  box-shadow: 0 30px 72px rgba(8, 17, 27, 0.24);
   overflow: hidden;
 }
 
@@ -33,61 +34,48 @@
 
 .copy {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .eyebrow {
   margin: 0;
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--panel-muted, rgba(8, 17, 35, 0.7));
+  color: var(--panel-muted, rgba(8, 17, 35, 0.72));
 }
 
 .title {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3.1rem);
-  line-height: 0.98;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  line-height: 1.02;
 }
 
-.intro {
-  max-width: 60ch;
+.subtitle {
   margin: 0;
-  line-height: 1.72;
-  color: var(--panel-muted-strong, rgba(8, 17, 35, 0.84));
+  color: var(--panel-muted-strong, rgba(8, 17, 35, 0.82));
+  line-height: 1.6;
 }
 
 .closeButton {
-  min-height: 44px;
+  min-height: 42px;
   padding: 10px 14px;
   border: 1px solid var(--panel-soft-border, rgba(8, 17, 35, 0.18));
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.3);
   color: inherit;
   font-weight: 700;
-  transition:
-    transform 200ms ease,
-    background-color 200ms ease,
-    box-shadow 200ms ease;
-}
-
-.closeButton:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.46);
-  box-shadow: 0 10px 24px rgba(8, 17, 35, 0.08);
 }
 
 .body {
   min-height: 0;
-  padding-right: 6px;
   overflow: auto;
-  display: grid;
-  gap: 20px;
+  padding-right: 4px;
 }
 
 .body::-webkit-scrollbar {
-  width: 10px;
+  width: 9px;
 }
 
 .body::-webkit-scrollbar-track {
@@ -97,17 +85,23 @@
 .body::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
   border-radius: 999px;
-  background: rgba(96, 108, 126, 0.54);
+  background: rgba(96, 108, 126, 0.5);
   background-clip: padding-box;
 }
 
 .body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(96, 108, 126, 0.54) transparent;
+  scrollbar-color: rgba(96, 108, 126, 0.5) transparent;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 .themeSakura {
-  --panel-bg: rgba(248, 222, 234, 0.97);
+  --panel-bg: rgba(250, 233, 240, 0.98);
   --panel-border: rgba(116, 56, 84, 0.16);
   --panel-text: #24111a;
   --panel-muted: rgba(36, 17, 26, 0.68);
@@ -116,7 +110,7 @@
 }
 
 .themeSpring {
-  --panel-bg: rgba(233, 245, 234, 0.97);
+  --panel-bg: rgba(236, 247, 236, 0.98);
   --panel-border: rgba(60, 88, 63, 0.14);
   --panel-text: #102119;
   --panel-muted: rgba(16, 33, 25, 0.68);
@@ -125,7 +119,7 @@
 }
 
 .themeFountain {
-  --panel-bg: rgba(194, 221, 252, 0.92);
+  --panel-bg: rgba(205, 229, 255, 0.95);
   --panel-border: rgba(44, 82, 120, 0.16);
   --panel-text: #0d2034;
   --panel-muted: rgba(13, 32, 52, 0.72);
@@ -134,7 +128,7 @@
 }
 
 .themeWarm {
-  --panel-bg: rgba(247, 238, 226, 0.97);
+  --panel-bg: rgba(249, 241, 229, 0.98);
   --panel-border: rgba(113, 84, 50, 0.16);
   --panel-text: #271a10;
   --panel-muted: rgba(39, 26, 16, 0.68);
@@ -145,22 +139,16 @@
 @media (max-width: 900px) {
   .dialog {
     width: calc(100vw - 20px);
-    height: min(84vh, 920px);
-    padding: 20px;
+    max-height: calc(100vh - 28px);
   }
 }
 
 @media (max-width: 720px) {
-  .backdrop {
-    padding: 12px;
-  }
-
   .dialog {
     width: calc(100vw - 16px);
-    height: calc(100vh - 20px);
-    gap: 18px;
+    max-height: calc(100vh - 20px);
     padding: 18px;
-    border-radius: 24px;
+    border-radius: 22px;
   }
 
   .header {

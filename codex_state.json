@@ -1,0 +1,67 @@
+{
+  "version": "1.2",
+  "last_completed_task": "task_04_add_hero_image_and_cta_behavior",
+  "tasks": {
+    "task_01_init_repo": {
+      "status": "done",
+      "notes": "seed files added"
+    },
+    "task_02_create_package_json_and_scaffold": {
+      "status": "done",
+      "notes": "2026-03-10T23:22:22+08:00: scaffold committed and pushed in d785e6a after npm install, lint, build, and test passed. Follow-up: bump Next.js from 15.5.2 to the latest 15.x patch release in a reviewed diff."
+    },
+    "task_03_create_pages_index_and_hero": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: rebuilt pages/index into a fixed desktop gate entry with the lowercase free ticket CTA, full-viewport hero framing, desktop scroll lock, and a scrollable 2D mobile fallback that reuses the same content modules."
+    },
+    "task_04_refine_hero_zoom_and_garden_camera": {
+      "status": "done",
+      "notes": "2026-03-11T19:44:31.5402985+08:00: approved, verified with npm ci, npm run lint, npm run build, and npm test, then pushed after feature commit ac511c9. Follow-up: user-owned package.json/package-lock Next.js version bump and .gitignore changes remain outside this task commit scope."
+    },
+    "task_04_add_hero_image_and_cta_behavior": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: implemented the gate-focused hero image treatment, hover preload, single zoom handoff into the desktop garden, and the mounted canvas reveal/back-to-gate behavior requested for Task 04."
+    },
+    "task_05_wire_contact_formspree_api": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: wired client-side Formspree submission through NEXT_PUBLIC_FORMSPREE_ENDPOINT with sanitization, validation, success/error toasts, and a non-proxy /api/contact note."
+    },
+    "task_06_scaffold_3d_canvas": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: delivered a desktop-only placeholder 3D garden canvas with lightweight procedural geometry so the reveal never lands on an empty scene."
+    },
+    "task_07_waypoint_overlay_and_projection_util": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: projected object anchors into larger diamond waypoints with side-aware labels, keyboard activation, and modal-safe blocking."
+    },
+    "task_08_particle_systems_for_sakura_fountain": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: added mild particle bursts and object reactions for the sakura tree, fountain, pavilion, and contact kiosk before panel open."
+    },
+    "task_09_panels_modals_and_theming": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: upgraded the main panel modal and nested detail dialogs with focus trapping, ESC close, themed backgrounds, and custom translucent scrollbars."
+    },
+    "task_10_content_pages_projects_certifications": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: rebuilt certifications, projects, and timeline cards to use searchable/detail-first flows and updated the standalone certifications/education routes to match."
+    },
+    "task_11_asset_sourcing_and_compression": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: no external GLB assets were fetched for this POC; procedural placeholders are documented in docs/asset-sources.md and assets/3d/_licenses_template.json remains empty."
+    },
+    "task_12_tests_and_ci": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: npm ci, npm run lint, npm run build, npm test, and a local next start smoke check for /, /certifications, and /education all passed. npm ci reported 0 vulnerabilities."
+    },
+    "task_13_accessibility_fixes": {
+      "status": "done",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: improved focus outlines, keyboard CTA/waypoint handling, focus return, modal trapping, ESC close, and contrast-aware theming across hero and panel flows."
+    },
+    "task_14_build_and_deploy_vercel_config": {
+      "status": "in_progress",
+      "notes": "2026-03-11T21:06:29.1961096+08:00: build output is deployable and vercel.json remains valid. Preview URL will be available after the origin/main push completes and Vercel finishes the deployment."
+    }
+  },
+  "notes": "Codex must update the specific task entry when completed. If tokens/time run out, set the task being worked on to 'in_progress' and write short progress notes."
+}

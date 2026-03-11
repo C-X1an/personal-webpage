@@ -8,6 +8,28 @@ const initialValues = {
   message: '',
 };
 
+function sanitizeValue(value, { preserveLineBreaks = false } = {}) {
+  const nextValue = String(value || '').replace(/[<>]/g, '').replace(/\r/g, '');
+
+  if (preserveLineBreaks) {
+    return nextValue
+      .split('\n')
+      .map((line) => line.trim())
+      .join('\n')
+      .trim();
+  }
+
+  return nextValue.replace(/\s+/g, ' ').trim();
+}
+
+function sanitizeValues(values) {
+  return {
+    name: sanitizeValue(values.name),
+    email: sanitizeValue(values.email),
+    message: sanitizeValue(values.message, { preserveLineBreaks: true }),
+  };
+}
+
 function GithubIcon(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
@@ -46,11 +68,7 @@ function ResumeIcon(props) {
         stroke="currentColor"
         strokeWidth="1.5"
       />
-      <path
-        d="M14 3.75V8h4.25"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <path d="M14 3.75V8h4.25" stroke="currentColor" strokeWidth="1.5" />
       <path
         d="M9.5 11.5h6M9.5 14.5h6M9.5 17.5h4"
         stroke="currentColor"
@@ -63,10 +81,6 @@ function ResumeIcon(props) {
 
 function validate(values) {
   const errors = {};
-
-  if (!values.name.trim()) {
-    errors.name = 'Name is required.';
-  }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
     errors.email = 'Enter a valid email address.';
@@ -94,7 +108,7 @@ export default function ContactPanel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const endpoint = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
-  const mailtoHref = buildMailto(values);
+  const mailtoHref = buildMailto(sanitizeValues(values));
 
   useEffect(() => {
     if (!toast) {
@@ -125,7 +139,8 @@ export default function ContactPanel() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    const validationErrors = validate(values);
+    const cleanedValues = sanitizeValues(values);
+    const validationErrors = validate(cleanedValues);
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -150,7 +165,7 @@ export default function ContactPanel() {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(cleanedValues),
       });
 
       if (!response.ok) {
@@ -190,21 +205,15 @@ export default function ContactPanel() {
 
           <form className={styles.form} onSubmit={handleSubmit} noValidate>
             <label className={styles.field}>
-              <span>Name</span>
+              <span>Name (optional)</span>
               <input
                 type="text"
                 name="name"
                 value={values.name}
                 onChange={handleChange}
                 autoComplete="name"
-                aria-invalid={Boolean(errors.name)}
-                aria-describedby={errors.name ? 'contact-name-error' : undefined}
+                aria-label="Name"
               />
-              {errors.name ? (
-                <p id="contact-name-error" className={styles.fieldError}>
-                  {errors.name}
-                </p>
-              ) : null}
             </label>
 
             <label className={styles.field}>
@@ -215,6 +224,7 @@ export default function ContactPanel() {
                 value={values.email}
                 onChange={handleChange}
                 autoComplete="email"
+                required
                 aria-invalid={Boolean(errors.email)}
                 aria-describedby={errors.email ? 'contact-email-error' : undefined}
               />
@@ -232,6 +242,7 @@ export default function ContactPanel() {
                 value={values.message}
                 onChange={handleChange}
                 rows="6"
+                required
                 aria-invalid={Boolean(errors.message)}
                 aria-describedby={errors.message ? 'contact-message-error' : undefined}
               />
@@ -274,7 +285,8 @@ export default function ContactPanel() {
             <div className={styles.sectionHeader}>
               <p className={styles.eyebrow}>Elsewhere</p>
               <p className={styles.lead}>
-                GitHub, resume access, and a direct mail draft stay reachable from the same panel.
+                GitHub, resume access, and a direct mail draft stay reachable from
+                the same panel.
               </p>
             </div>
 

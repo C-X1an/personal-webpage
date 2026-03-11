@@ -7,9 +7,9 @@ export default function handler(req, res) {
     });
   }
 
-  return res.status(503).json({
+  return res.status(410).json({
     ok: false,
     message:
-      'Contact delivery is scaffolded but not wired yet. Task_05 will forward messages to Formspree.',
+      'This project posts directly to NEXT_PUBLIC_FORMSPREE_ENDPOINT on the client. A proxy route is not required for the current deployment path.',
   });
 }

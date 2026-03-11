@@ -23,7 +23,8 @@ export default function CertificationsPage({ certifications }) {
             <h1 className={styles.title}>Certifications</h1>
             <p className={styles.lead}>
               The same certification data powers the sakura modal inside the
-              desktop garden and this standalone route for direct sharing.
+              desktop garden, including searchable cards and in-place preview
+              dialogs.
             </p>
             <nav className={styles.pageNav} aria-label="Certification page navigation">
               <Link href="/" className={styles.pageNavLink}>
@@ -35,7 +36,7 @@ export default function CertificationsPage({ certifications }) {
             </nav>
           </header>
 
-          <CertificationGrid items={certifications} />
+          <CertificationGrid items={certifications} showArchiveAction={false} />
         </div>
       </main>
     </>

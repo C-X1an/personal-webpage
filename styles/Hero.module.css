@@ -1,20 +1,24 @@
 .pageShell {
   width: 100%;
-  overflow-x: clip;
+  min-height: 100vh;
+  background: #08111b;
 }
 
-.heroViewport {
+.desktopStage {
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #08111b;
 }
 
 .hero {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
   overflow: hidden;
   isolation: isolate;
-  background: #09121d;
+  background: #08111b;
 }
 
 .heroMedia {
@@ -24,184 +28,178 @@
 
 .image {
   object-fit: cover;
-  object-position: center;
+  object-position: 50% 42%;
+  transform-origin: 50% 54%;
   transform: scale(1);
-  transition:
-    transform 860ms cubic-bezier(0.2, 0.88, 0.22, 1),
-    filter 860ms ease,
-    opacity 360ms ease;
+  will-change: transform, filter, opacity;
 }
 
 .scrim,
-.lens {
+.gateBloom,
+.transitionVeil {
   position: absolute;
   inset: 0;
-  transition:
-    opacity 860ms ease,
-    transform 860ms cubic-bezier(0.2, 0.88, 0.22, 1);
+  pointer-events: none;
 }
 
 .scrim {
   background:
-    linear-gradient(180deg, rgba(8, 17, 35, 0.18), rgba(8, 17, 35, 0.28)),
-    radial-gradient(circle at 50% 62%, transparent 0%, rgba(8, 17, 35, 0.18) 62%);
+    linear-gradient(180deg, rgba(8, 17, 27, 0.06), rgba(8, 17, 27, 0.24)),
+    radial-gradient(circle at 50% 56%, transparent 0%, rgba(8, 17, 27, 0.12) 46%, rgba(8, 17, 27, 0.34) 100%);
 }
 
-.lens {
+.gateBloom {
   background:
-    radial-gradient(circle at 50% 62%, rgba(255, 238, 215, 0.04) 0%, rgba(255, 238, 215, 0.22) 20%, transparent 42%),
-    radial-gradient(circle at 50% 82%, rgba(246, 217, 232, 0.16), transparent 24%);
+    radial-gradient(circle at 50% 56%, rgba(255, 240, 221, 0.34), rgba(255, 240, 221, 0.14) 16%, transparent 42%),
+    radial-gradient(circle at 50% 62%, rgba(245, 198, 220, 0.18), transparent 28%);
   mix-blend-mode: screen;
 }
 
-.heroCenter {
+.transitionVeil {
+  background:
+    radial-gradient(circle at 50% 57%, transparent 0%, transparent 14%, rgba(8, 17, 27, 0.08) 28%, rgba(8, 17, 27, 0.3) 100%);
+}
+
+.heroGate {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 58%;
   display: grid;
   place-items: center;
-  padding: 24px;
+  transform: translate(-50%, -50%);
 }
 
 .ticketButton {
-  min-width: clamp(178px, 18vw, 214px);
-  min-height: 60px;
+  min-width: clamp(164px, 16vw, 204px);
+  min-height: 56px;
   padding: 14px 22px;
-  border: 1px solid rgba(70, 42, 55, 0.18);
-  border-radius: 10px;
-  background: rgba(255, 247, 241, 0.92);
-  color: #20150e;
-  font-size: clamp(0.98rem, 1.3vw, 1.08rem);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  border: 1px solid rgba(113, 76, 93, 0.28);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 250, 252, 0.8), rgba(244, 225, 234, 0.62)),
+    rgba(255, 250, 252, 0.56);
+  color: #25171e;
+  font-size: clamp(0.98rem, 1.1vw, 1.02rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: none;
   box-shadow:
-    0 18px 38px rgba(8, 17, 35, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    0 20px 38px rgba(8, 17, 27, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
   transition:
     transform 220ms ease,
-    opacity 220ms ease,
     box-shadow 220ms ease,
+    opacity 220ms ease,
     background-color 220ms ease;
 }
 
 .ticketButton:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-2px);
   box-shadow:
-    0 22px 42px rgba(8, 17, 35, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 24px 42px rgba(8, 17, 27, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 .ticketButton:active:not(:disabled) {
-  transform: scale(0.99);
+  transform: translateY(0);
 }
 
 .ticketButton:disabled {
   cursor: wait;
 }
 
-.zooming .image {
-  transform: scale(1.28);
-  filter: saturate(1.05) brightness(1.04);
+.entering .image {
+  animation: heroZoom 1550ms cubic-bezier(0.16, 0.88, 0.2, 1) forwards;
 }
 
-.zooming .scrim {
-  opacity: 0.74;
-  transform: scale(1.03);
+.entering .scrim {
+  animation: heroScrim 1550ms ease forwards;
 }
 
-.zooming .lens {
-  opacity: 0.95;
-  transform: scale(1.14);
+.entering .gateBloom {
+  animation: heroBloom 1550ms ease forwards;
 }
 
-.zooming .ticketButton,
-.holding .ticketButton,
+.entering .transitionVeil {
+  animation: heroVeil 1550ms ease forwards;
+}
+
+.entering .ticketButton,
 .open .ticketButton {
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.9);
-}
-
-.holding .image {
-  transform: scale(1.34);
-  filter: saturate(1.08) brightness(1.06);
-}
-
-.holding .scrim {
-  opacity: 0.88;
-}
-
-.holding .lens {
-  opacity: 1;
-  transform: scale(1.18);
+  transform: translateY(10px) scale(0.94);
 }
 
 .open {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 260ms ease;
 }
 
 .canvasLoading {
   position: absolute;
   inset: 0;
+  z-index: 8;
   display: grid;
   place-items: center;
-  z-index: 10;
   background:
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.32), transparent 26%),
-    linear-gradient(180deg, rgba(226, 238, 229, 0.92), rgba(205, 226, 218, 0.96));
-  color: #132436;
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.24), transparent 24%),
+    linear-gradient(180deg, rgba(233, 240, 233, 0.92), rgba(215, 228, 218, 0.94));
+  color: #173149;
   font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.contentSection {
+.mobileContentSection {
+  display: none;
   position: relative;
-  padding: 96px 20px 120px;
+  padding: 76px 16px 88px;
   background:
-    radial-gradient(circle at top left, rgba(255, 183, 213, 0.22), transparent 28%),
-    radial-gradient(circle at top right, rgba(190, 227, 248, 0.26), transparent 28%),
-    linear-gradient(180deg, rgba(249, 243, 236, 0.98), rgba(239, 246, 243, 0.98));
+    radial-gradient(circle at top left, rgba(255, 183, 213, 0.22), transparent 30%),
+    radial-gradient(circle at top right, rgba(190, 227, 248, 0.28), transparent 28%),
+    linear-gradient(180deg, rgba(249, 242, 236, 0.98), rgba(237, 245, 241, 0.98));
 }
 
 .contentInner {
-  width: min(1180px, 100%);
+  width: min(1120px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 26px;
+  gap: 22px;
 }
 
 .contentIntro {
   display: grid;
   gap: 12px;
-  padding: 28px;
+  padding: 24px;
   border: 1px solid rgba(8, 17, 35, 0.08);
-  border-radius: 32px;
+  border-radius: 28px;
   background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 26px 64px rgba(8, 17, 35, 0.08);
+  box-shadow: 0 22px 52px rgba(8, 17, 35, 0.08);
 }
 
 .contentEyebrow {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: #5a6f87;
 }
 
 .contentTitle {
   margin: 0;
-  font-size: clamp(2.4rem, 6vw, 4.2rem);
-  line-height: 0.96;
+  font-size: clamp(2.2rem, 6vw, 3.9rem);
+  line-height: 0.98;
   color: #081123;
 }
 
 .contentLead {
-  max-width: 62ch;
   margin: 0;
+  max-width: 60ch;
   color: #42596f;
-  line-height: 1.72;
+  line-height: 1.7;
 }
 
 .routeRow {
@@ -213,11 +211,11 @@
 .routeLink {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   min-height: 44px;
   padding: 10px 14px;
+  border: 1px solid rgba(8, 17, 35, 0.08);
   border-radius: 14px;
-  background: rgba(8, 17, 35, 0.05);
+  background: rgba(8, 17, 35, 0.04);
   color: #081123;
   font-weight: 700;
   text-decoration: none;
@@ -225,34 +223,109 @@
 
 .sectionDeck {
   display: grid;
-  gap: 20px;
+  gap: 18px;
 }
 
 .sectionCard {
-  padding: 28px;
+  padding: 24px;
   border: 1px solid rgba(8, 17, 35, 0.08);
-  border-radius: 30px;
+  border-radius: 28px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(250, 248, 244, 0.78)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(250, 248, 245, 0.78)),
     rgba(255, 255, 255, 0.82);
-  box-shadow: 0 24px 56px rgba(8, 17, 35, 0.08);
+  box-shadow: 0 22px 54px rgba(8, 17, 35, 0.08);
 }
 
-@media (max-width: 900px) {
-  .contentSection {
-    padding-top: 84px;
+@keyframes heroZoom {
+  0% {
+    transform: scale(1);
+    filter: saturate(1) brightness(1);
+  }
+
+  62% {
+    transform: scale(1.44);
+    filter: saturate(1.03) brightness(1.02);
+  }
+
+  100% {
+    transform: scale(2.28);
+    filter: saturate(1.08) brightness(1.05);
+  }
+}
+
+@keyframes heroScrim {
+  0% {
+    opacity: 0.8;
+  }
+
+  70% {
+    opacity: 0.86;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes heroBloom {
+  0% {
+    opacity: 0.34;
+    transform: scale(1);
+  }
+
+  55% {
+    opacity: 0.78;
+    transform: scale(1.16);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.34);
+  }
+}
+
+@keyframes heroVeil {
+  0% {
+    opacity: 0.2;
+  }
+
+  70% {
+    opacity: 0.44;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 959px) {
+  .desktopStage {
+    height: 100svh;
+    min-height: 640px;
+  }
+
+  .image {
+    object-position: 50% 46%;
+  }
+
+  .heroGate {
+    top: 60%;
+  }
+
+  .mobileContentSection {
+    display: block;
   }
 }
 
 @media (max-width: 720px) {
-  .ticketButton {
-    min-width: 170px;
-    min-height: 56px;
-    border-radius: 9px;
+  .desktopStage {
+    min-height: 560px;
   }
 
-  .contentSection {
-    padding: 72px 16px 88px;
+  .ticketButton {
+    min-width: 156px;
+    min-height: 54px;
+    padding: 12px 18px;
   }
 
   .contentIntro,

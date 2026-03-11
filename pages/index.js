@@ -12,22 +12,23 @@ import { getHomePageContent } from '../lib/content';
 import contentStyles from '../styles/ContentPanels.module.css';
 import styles from '../styles/Hero.module.css';
 
-const GardenCanvas = dynamic(() => import('../components/GardenCanvas'), {
+const DESKTOP_BREAKPOINT = 960;
+const HERO_TRANSITION_MS = 1550;
+const loadGardenCanvas = () => import('../components/GardenCanvas');
+
+const GardenCanvas = dynamic(loadGardenCanvas, {
   ssr: false,
   loading: () => (
     <div className={styles.canvasLoading} aria-live="polite">
-      Opening garden...
+      Preparing garden...
     </div>
   ),
 });
 
-const DESKTOP_BREAKPOINT = 900;
-const HERO_ZOOM_DURATION_MS = 760;
-const HERO_HOLD_DURATION_MS = 180;
-
 export default function HomePage({ certifications, projects, timelineItems }) {
   const [heroPhase, setHeroPhase] = useState('idle');
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(false);
   const [shouldMountGarden, setShouldMountGarden] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const timerRef = useRef([]);
@@ -37,114 +38,132 @@ export default function HomePage({ certifications, projects, timelineItems }) {
       return undefined;
     }
 
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const updateReducedMotion = (event) => setPrefersReducedMotion(event.matches);
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const desktopQuery = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`);
 
-    updateReducedMotion(mediaQuery);
+    const updateReducedMotion = (event) => {
+      setPrefersReducedMotion(event.matches);
+    };
 
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', updateReducedMotion);
+    const updateViewport = (event) => {
+      setIsDesktopViewport(event.matches);
+    };
 
-      return () => {
-        mediaQuery.removeEventListener('change', updateReducedMotion);
-      };
-    }
+    updateReducedMotion(motionQuery);
+    updateViewport(desktopQuery);
 
-    mediaQuery.addListener(updateReducedMotion);
+    const addListener = (mediaQuery, callback) => {
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', callback);
+        return () => mediaQuery.removeEventListener('change', callback);
+      }
+
+      mediaQuery.addListener(callback);
+      return () => mediaQuery.removeListener(callback);
+    };
+
+    const removeMotionListener = addListener(motionQuery, updateReducedMotion);
+    const removeViewportListener = addListener(desktopQuery, updateViewport);
 
     return () => {
-      mediaQuery.removeListener(updateReducedMotion);
+      removeMotionListener();
+      removeViewportListener();
     };
   }, []);
 
   useEffect(() => {
-    if (typeof document === 'undefined') {
+    if (typeof document === 'undefined' || !isDesktopViewport) {
       return undefined;
     }
 
     const root = document.documentElement;
-    const previousOverflow = root.style.overflow;
+    const body = document.body;
+    const previousRootOverflow = root.style.overflow;
+    const previousBodyOverflow = body.style.overflow;
+    const previousRootOverscroll = root.style.overscrollBehavior;
+    const previousBodyOverscroll = body.style.overscrollBehavior;
 
-    if (heroPhase !== 'idle' || shouldMountGarden || isModalOpen) {
-      root.style.overflow = 'hidden';
-    } else {
-      root.style.overflow = previousOverflow;
-    }
+    root.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    root.style.overscrollBehavior = 'none';
+    body.style.overscrollBehavior = 'none';
 
     return () => {
-      root.style.overflow = previousOverflow;
+      root.style.overflow = previousRootOverflow;
+      body.style.overflow = previousBodyOverflow;
+      root.style.overscrollBehavior = previousRootOverscroll;
+      body.style.overscrollBehavior = previousBodyOverscroll;
     };
-  }, [heroPhase, isModalOpen, shouldMountGarden]);
+  }, [isDesktopViewport, heroPhase, shouldMountGarden, isModalOpen]);
+
+  useEffect(() => {
+    if (isDesktopViewport) {
+      return;
+    }
+
+    clearTimers(timerRef);
+    setIsModalOpen(false);
+    setShouldMountGarden(false);
+    setHeroPhase('idle');
+  }, [isDesktopViewport]);
 
   useEffect(() => {
     return () => {
-      timerRef.current.forEach((timer) => window.clearTimeout(timer));
-      timerRef.current = [];
+      clearTimers(timerRef);
     };
   }, []);
-
-  function clearTimers() {
-    timerRef.current.forEach((timer) => window.clearTimeout(timer));
-    timerRef.current = [];
-  }
 
   function schedule(callback, delay) {
     const timer = window.setTimeout(callback, delay);
     timerRef.current.push(timer);
-    return timer;
   }
 
   function handleMobileFallback() {
-    const contentSection = document.getElementById('content');
+    const contentSection = document.getElementById('mobile-content');
 
     contentSection?.scrollIntoView({
       behavior: prefersReducedMotion ? 'auto' : 'smooth',
       block: 'start',
     });
+  }
 
-    schedule(() => {
-      setHeroPhase('idle');
-    }, prefersReducedMotion ? 0 : 120);
+  function preloadGarden() {
+    if (isDesktopViewport) {
+      loadGardenCanvas();
+    }
   }
 
   function handleHeroTicketClick() {
-    if (typeof window === 'undefined' || heroPhase !== 'idle') {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    clearTimers();
+    if (!isDesktopViewport) {
+      handleMobileFallback();
+      return;
+    }
 
-    const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+    if (heroPhase !== 'idle') {
+      return;
+    }
+
+    clearTimers(timerRef);
+    preloadGarden();
+    setShouldMountGarden(true);
 
     if (prefersReducedMotion) {
-      if (isDesktop) {
-        setShouldMountGarden(true);
-        setHeroPhase('open');
-      } else {
-        handleMobileFallback();
-      }
-
+      setHeroPhase('open');
       return;
     }
 
-    setHeroPhase('zooming');
-
+    setHeroPhase('entering');
     schedule(() => {
-      setHeroPhase('holding');
-
-      schedule(() => {
-        if (isDesktop) {
-          setShouldMountGarden(true);
-          setHeroPhase('open');
-        } else {
-          handleMobileFallback();
-        }
-      }, HERO_HOLD_DURATION_MS);
-    }, HERO_ZOOM_DURATION_MS);
+      setHeroPhase('open');
+    }, HERO_TRANSITION_MS);
   }
 
   function handleCloseGarden() {
-    clearTimers();
+    clearTimers(timerRef);
     setIsModalOpen(false);
     setShouldMountGarden(false);
     setHeroPhase('idle');
@@ -156,7 +175,7 @@ export default function HomePage({ certifications, projects, timelineItems }) {
         <title>Chong Xian | Garden Entry</title>
         <meta
           name="description"
-          content="Interactive garden portfolio entry with a fullscreen hero, projected waypoints, themed panels, and accessible 2D fallback content."
+          content="Interactive garden portfolio entry with a full-viewport hero, projected waypoints, themed panels, and a mobile 2D fallback."
         />
         <meta
           name="viewport"
@@ -165,36 +184,43 @@ export default function HomePage({ certifications, projects, timelineItems }) {
       </Head>
 
       <main className={styles.pageShell}>
-        <section className={styles.heroViewport}>
-          <Hero onTicketClick={handleHeroTicketClick} phase={heroPhase} />
-
-          {shouldMountGarden ? (
+        <section className={styles.desktopStage}>
+          {shouldMountGarden && isDesktopViewport ? (
             <GardenCanvas
               certifications={certifications}
               projects={projects}
               timelineItems={timelineItems}
               reducedMotion={prefersReducedMotion}
+              transitionState={heroPhase}
               onExit={handleCloseGarden}
               onModalChange={setIsModalOpen}
             />
           ) : null}
+
+          <Hero
+            onTicketClick={handleHeroTicketClick}
+            onTicketIntent={preloadGarden}
+            phase={heroPhase}
+            isDesktop={isDesktopViewport}
+          />
         </section>
 
         <section
-          id="content"
-          className={styles.contentSection}
-          aria-labelledby="content-title"
+          id="mobile-content"
+          className={styles.mobileContentSection}
+          aria-labelledby="mobile-content-title"
         >
           <div className={styles.contentInner}>
             <header className={styles.contentIntro}>
               <p className={styles.contentEyebrow}>2D garden path</p>
-              <h1 id="content-title" className={styles.contentTitle}>
-                Every portfolio section stays readable without the canvas.
+              <h1 id="mobile-content-title" className={styles.contentTitle}>
+                The same portfolio content remains fully readable without the 3D
+                scene.
               </h1>
               <p className={styles.contentLead}>
-                Smaller screens skip WebGL entirely and land on this layered
-                content path instead. The same data drives the standalone
-                section pages and the desktop garden panels.
+                On smaller screens the site stays as a layered, scrollable
+                experience with the same projects, certificates, timeline, and
+                contact routes.
               </p>
               <div className={styles.routeRow}>
                 <Link href="/certifications" className={styles.routeLink}>
@@ -223,7 +249,7 @@ export default function HomePage({ certifications, projects, timelineItems }) {
                   <p className={contentStyles.eyebrow}>Sakura branch</p>
                   <h2 className={contentStyles.title}>Certifications</h2>
                   <p className={contentStyles.lead}>
-                    Searchable certification cards are available here and in the
+                    Searchable certificate cards are available here and in the
                     sakura panel.
                   </p>
                 </div>
@@ -235,8 +261,8 @@ export default function HomePage({ certifications, projects, timelineItems }) {
                   <p className={contentStyles.eyebrow}>Fountain route</p>
                   <h2 className={contentStyles.title}>Education and work</h2>
                   <p className={contentStyles.lead}>
-                    The vertical timeline keeps an even rhythm while scaling
-                    across different entry lengths.
+                    The vertical timeline is ordered from newest to oldest and
+                    opens full details on demand.
                   </p>
                 </div>
                 <EducationTimeline items={timelineItems} />
@@ -251,6 +277,11 @@ export default function HomePage({ certifications, projects, timelineItems }) {
       </main>
     </>
   );
+}
+
+function clearTimers(timerRef) {
+  timerRef.current.forEach((timer) => window.clearTimeout(timer));
+  timerRef.current = [];
 }
 
 export function getStaticProps() {

@@ -6,7 +6,7 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 ---
 
 ## Last update
-- **timestamp:** 2026-03-10T23:22:22+08:00
+- **timestamp:** 2026-03-11T21:06:29.1961096+08:00
 - **agent:** codex (automated)
 
 ---
@@ -19,7 +19,7 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 ---
 
 ## In-progress tasks
-- None. Awaiting the next approved task.
+- `task_14_build_and_deploy_vercel_config`: build is ready and `origin/main` push will trigger the Vercel deployment; preview URL is pending the remote deployment result.
 
 ---
 
@@ -33,9 +33,9 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 ---
 
 ## Notes / blockers
-- No blockers at this time.
-- Asset downloads may take time; Codex will record each asset in `assets/3d/_licenses.json`.
-- `npm install` reported that `next@15.5.2` has a known security issue. Registry lookup after the push showed `15.5.12` is the latest `15.x` release, so that patch bump should be handled in the next reviewed diff before deployment work.
+- No blocking local issues remain for the Task 03/04 scope.
+- The desktop garden POC uses procedural placeholder geometry instead of external GLBs so the first reveal stays lightweight. Asset reporting for that decision lives in `docs/asset-sources.md`.
+- `npm ci` completed with `0 vulnerabilities`. The remaining package-manager warnings are deprecation notices in transitive tooling (`eslint@8`, `glob@7`, `rimraf@3`).
 
 ---
 
@@ -54,3 +54,5 @@ To resume, open the repo and run `git status`, then run `npm run dev`. Codex wil
 2026-03-11T19:19:17.8396844+08:00: Started `task_04_refine_hero_zoom_and_garden_camera`. Scope: replace the first-pass desktop entry with a more dramatic hero zoom and staged garden reveal, move waypoint positioning to projected DOM markers on actual object coordinates, add themed panel/content scaffolding for certifications, education/work, projects, and contact, and extend the mobile fallback/routes plus smoke coverage before review. Commit hash: pending approval. Preview URL: pending.
 
 2026-03-11T19:44:31.5402985+08:00: Completed `task_04_refine_hero_zoom_and_garden_camera`. Feature commit `ac511c9` passed `npm ci`, `npm run lint`, `npm run build`, and `npm test` before push to `origin/main`. Scope delivered: dramatic hero zoom flow, desktop birds-eye garden camera with projected waypoints and themed modal panels, mobile 2D content sections/routes, contact Formspree client wiring, and smoke coverage. Remaining unrelated local changes: `.gitignore`, `package.json`, and `package-lock.json`.
+
+2026-03-11T21:06:29.1961096+08:00: Completed the combined Task 03/04 UX rewrite in the current workspace state. Scope delivered: full-viewport hero with the lowercase `free ticket` CTA centered in the gate, single-stage hero-to-garden handoff, desktop-only procedural 3D garden POC with persistent camera parallax and projected waypoints, nested certification/project/timeline detail dialogs, direct Formspree client wiring, updated mobile 2D sections, and `docs/asset-sources.md`. Build summary: `npm ci` passed with `0 vulnerabilities`; `npm run lint`, `npm run build`, `npm test`, and a local `next start` smoke check for `/`, `/certifications`, and `/education` all passed. Preview URL: pending remote deployment after push to `origin/main`.
