@@ -159,17 +159,15 @@ export default function ContactPanel() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cleanedValues),
-      });
+      let response = await postContact(endpoint, cleanedValues);
 
       if (!response.ok) {
-        throw new Error('Request failed');
+        response = await postContact('/api/contact', cleanedValues);
+      }
+
+      if (!response.ok) {
+        const payload = await readJson(response);
+        throw new Error(payload.message || 'Request failed');
       }
 
       setValues(initialValues);
@@ -177,11 +175,13 @@ export default function ContactPanel() {
         tone: 'success',
         message: 'Message sent. The garden kiosk has your note.',
       });
-    } catch {
+    } catch (error) {
       setToast({
         tone: 'error',
         message:
-          'The request did not reach Formspree. Use the mail fallback or GitHub link below.',
+          error instanceof Error && error.message
+            ? error.message
+            : 'The request did not reach Formspree. Use the mail fallback or GitHub link below.',
       });
     } finally {
       setIsSubmitting(false);
@@ -272,7 +272,7 @@ export default function ContactPanel() {
               className={`${styles.toast} ${
                 toast.tone === 'success' ? styles.toastSuccess : styles.toastError
               }`}
-              role="status"
+              role={toast.tone === 'error' ? 'alert' : 'status'}
               aria-live="polite"
             >
               {toast.message}
@@ -336,4 +336,23 @@ export default function ContactPanel() {
       </div>
     </div>
   );
+}
+
+async function postContact(url, payload) {
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+async function readJson(response) {
+  try {
+    return await response.json();
+  } catch {
+    return {};
+  }
 }

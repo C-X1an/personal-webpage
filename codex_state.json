@@ -20,7 +20,7 @@
     },
     "task_04_add_hero_image_and_cta_behavior": {
       "status": "done",
-      "notes": "2026-03-11T21:06:29.1961096+08:00: implemented the gate-focused hero image treatment, hover preload, single zoom handoff into the desktop garden, and the mounted canvas reveal/back-to-gate behavior requested for Task 04."
+      "notes": "2026-03-11T22:47:50.1064687+08:00: polished Task 04 with a desktop full-gate hero framing, uppercase FREE TICKET CTA, a single requestAnimationFrame zoom handoff into the elevated garden view, tighter waypoint/panel behavior, restored-garden home links, and Formspree client+proxy fallback after lint/build/test/dev smoke checks passed."
     },
     "task_05_wire_contact_formspree_api": {
       "status": "done",

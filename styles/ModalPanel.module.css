@@ -80,14 +80,14 @@
 
 .body {
   min-height: 0;
-  padding-right: 6px;
+  padding-right: 2px;
   overflow: auto;
   display: grid;
   gap: 20px;
 }
 
 .body::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 .body::-webkit-scrollbar-track {
@@ -95,15 +95,15 @@
 }
 
 .body::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
+  border: 2px solid transparent;
   border-radius: 999px;
-  background: rgba(96, 108, 126, 0.54);
+  background: rgba(255, 255, 255, 0.32);
   background-clip: padding-box;
 }
 
 .body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(96, 108, 126, 0.54) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.32) transparent;
 }
 
 .themeSakura {

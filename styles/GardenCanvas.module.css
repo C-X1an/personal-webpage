@@ -3,22 +3,16 @@
   inset: 0;
   z-index: 10;
   opacity: 0;
-  transform: scale(1.08);
+  transform: scale(1.03);
   filter: blur(14px) saturate(0.94);
+  pointer-events: none;
   transition:
-    opacity 640ms ease,
-    transform 1400ms cubic-bezier(0.16, 0.88, 0.2, 1),
-    filter 780ms ease;
-}
-
-.entering,
-.open {
-  opacity: 1;
+    opacity 220ms linear,
+    transform 220ms linear,
+    filter 220ms linear;
 }
 
 .open {
-  transform: scale(1);
-  filter: none;
   pointer-events: auto;
 }
 

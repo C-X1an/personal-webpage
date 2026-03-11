@@ -1,0 +1,1312 @@
+diff --git a/STATUS.md b/STATUS.md
+index 803d362..62ac710 100644
+--- a/STATUS.md
++++ b/STATUS.md
+@@ -6,7 +6,7 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
+ ---
+ 
+ ## Last update
+-- **timestamp:** 2026-03-11T21:06:29.1961096+08:00
++- **timestamp:** 2026-03-11T22:47:50.1064687+08:00
+ - **agent:** codex (automated)
+ 
+ ---
+@@ -56,3 +56,5 @@ To resume, open the repo and run `git status`, then run `npm run dev`. Codex wil
+ 2026-03-11T19:44:31.5402985+08:00: Completed `task_04_refine_hero_zoom_and_garden_camera`. Feature commit `ac511c9` passed `npm ci`, `npm run lint`, `npm run build`, and `npm test` before push to `origin/main`. Scope delivered: dramatic hero zoom flow, desktop birds-eye garden camera with projected waypoints and themed modal panels, mobile 2D content sections/routes, contact Formspree client wiring, and smoke coverage. Remaining unrelated local changes: `.gitignore`, `package.json`, and `package-lock.json`.
+ 
+ 2026-03-11T21:06:29.1961096+08:00: Completed the combined Task 03/04 UX rewrite in the current workspace state. Scope delivered: full-viewport hero with the lowercase `free ticket` CTA centered in the gate, single-stage hero-to-garden handoff, desktop-only procedural 3D garden POC with persistent camera parallax and projected waypoints, nested certification/project/timeline detail dialogs, direct Formspree client wiring, updated mobile 2D sections, and `docs/asset-sources.md`. Build summary: `npm ci` passed with `0 vulnerabilities`; `npm run lint`, `npm run build`, `npm test`, and a local `next start` smoke check for `/`, `/certifications`, and `/education` all passed. Preview URL: pending remote deployment after push to `origin/main`.
++
++2026-03-11T22:47:50.1064687+08:00: Refined `task_04_add_hero_image_and_cta_behavior` into the requested production polish pass. The desktop hero now keeps the full gate visible with a centered uppercase `FREE TICKET` button and drives a single `requestAnimationFrame` tween into the garden handoff while the desktop canvas preloads behind the scene. The garden opens at a slightly elevated side view with persistent mouse pan, waypoint labels slide out from larger anchored diamonds, certification/project/timeline panels use centered 70-80% viewport modals with thin translucent custom scrollbars, certificate previews stay in-modal, `View All Projects` opens in a new tab, standalone archive pages return to `/?view=garden`, and the contact form now retries through `/api/contact` if direct Formspree POSTs fail. Validation summary: `npm ci`, `npm run lint`, `npm run build`, and `npm test` all passed; an escalated `npm run dev` smoke check returned `200` for `/`, `/?view=garden`, `/certifications`, and `/education`, and `GET /api/contact` returned the expected `405`. Preview URL remains pending the post-push Vercel deployment.
+diff --git a/codex_state.json b/codex_state.json
+index 4372612..7d92697 100644
+--- a/codex_state.json
++++ b/codex_state.json
+@@ -20,7 +20,7 @@
+     },
+     "task_04_add_hero_image_and_cta_behavior": {
+       "status": "done",
+-      "notes": "2026-03-11T21:06:29.1961096+08:00: implemented the gate-focused hero image treatment, hover preload, single zoom handoff into the desktop garden, and the mounted canvas reveal/back-to-gate behavior requested for Task 04."
++      "notes": "2026-03-11T22:47:50.1064687+08:00: polished Task 04 with a desktop full-gate hero framing, uppercase FREE TICKET CTA, a single requestAnimationFrame zoom handoff into the elevated garden view, tighter waypoint/panel behavior, restored-garden home links, and Formspree client+proxy fallback after lint/build/test/dev smoke checks passed."
+     },
+     "task_05_wire_contact_formspree_api": {
+       "status": "done",
+diff --git a/components/CertificationGrid.jsx b/components/CertificationGrid.jsx
+index 002ddb7..be482a2 100644
+--- a/components/CertificationGrid.jsx
++++ b/components/CertificationGrid.jsx
+@@ -1,5 +1,4 @@
+ import Image from 'next/image';
+-import Link from 'next/link';
+ import { useDeferredValue, useState } from 'react';
+ 
+ import DetailModal from './DetailModal';
+@@ -43,9 +42,9 @@ export default function CertificationGrid({
+           </div>
+ 
+           {showArchiveAction ? (
+-            <Link href={archiveHref} className={styles.sectionAction}>
++            <a href={archiveHref} className={styles.sectionAction}>
+               View all certifications
+-            </Link>
++            </a>
+           ) : null}
+         </div>
+ 
+@@ -56,14 +55,7 @@ export default function CertificationGrid({
+         ) : (
+           <div className={styles.certGrid}>
+             {filteredItems.map((item) => (
+-              <button
+-                key={item.id}
+-                type="button"
+-                className={styles.certCard}
+-                onClick={() => setActiveCertificationId(item.id)}
+-                aria-haspopup="dialog"
+-                aria-label={`View ${item.title} certificate`}
+-              >
++              <article key={item.id} className={styles.certCard}>
+                 <div className={styles.certThumbFrame}>
+                   {item.imageSrc ? (
+                     <Image
+@@ -82,8 +74,23 @@ export default function CertificationGrid({
+                   <span className={styles.metaLine}>{item.date}</span>
+                 </div>
+ 
+-                <span className={styles.cardHint}>View certificate</span>
+-              </button>
++                <div className={styles.cardActions}>
++                  <button
++                    type="button"
++                    className={styles.inlineActionButton}
++                    onClick={() => setActiveCertificationId(item.id)}
++                    aria-haspopup="dialog"
++                    aria-label={`View ${item.title} certificate`}
++                  >
++                    View Certificate
++                  </button>
++                  {item.fileSrc ? (
++                    <a href={item.fileSrc} download className={styles.subtleLink}>
++                      Download
++                    </a>
++                  ) : null}
++                </div>
++              </article>
+             ))}
+           </div>
+         )}
+@@ -116,6 +123,7 @@ export default function CertificationGrid({
+                 alt={`${activeCertification.title} enlarged certificate preview`}
+                 className={styles.detailMedia}
+                 fill
++                priority
+                 sizes="(max-width: 900px) 100vw, 60vw"
+               />
+             ) : (
+diff --git a/components/ContactPanel.jsx b/components/ContactPanel.jsx
+index a9809e2..377b30c 100644
+--- a/components/ContactPanel.jsx
++++ b/components/ContactPanel.jsx
+@@ -159,17 +159,15 @@ export default function ContactPanel() {
+     setIsSubmitting(true);
+ 
+     try {
+-      const response = await fetch(endpoint, {
+-        method: 'POST',
+-        headers: {
+-          Accept: 'application/json',
+-          'Content-Type': 'application/json',
+-        },
+-        body: JSON.stringify(cleanedValues),
+-      });
++      let response = await postContact(endpoint, cleanedValues);
+ 
+       if (!response.ok) {
+-        throw new Error('Request failed');
++        response = await postContact('/api/contact', cleanedValues);
++      }
++
++      if (!response.ok) {
++        const payload = await readJson(response);
++        throw new Error(payload.message || 'Request failed');
+       }
+ 
+       setValues(initialValues);
+@@ -177,11 +175,13 @@ export default function ContactPanel() {
+         tone: 'success',
+         message: 'Message sent. The garden kiosk has your note.',
+       });
+-    } catch {
++    } catch (error) {
+       setToast({
+         tone: 'error',
+         message:
+-          'The request did not reach Formspree. Use the mail fallback or GitHub link below.',
++          error instanceof Error && error.message
++            ? error.message
++            : 'The request did not reach Formspree. Use the mail fallback or GitHub link below.',
+       });
+     } finally {
+       setIsSubmitting(false);
+@@ -272,7 +272,7 @@ export default function ContactPanel() {
+               className={`${styles.toast} ${
+                 toast.tone === 'success' ? styles.toastSuccess : styles.toastError
+               }`}
+-              role="status"
++              role={toast.tone === 'error' ? 'alert' : 'status'}
+               aria-live="polite"
+             >
+               {toast.message}
+@@ -337,3 +337,22 @@ export default function ContactPanel() {
+     </div>
+   );
+ }
++
++async function postContact(url, payload) {
++  return fetch(url, {
++    method: 'POST',
++    headers: {
++      Accept: 'application/json',
++      'Content-Type': 'application/json',
++    },
++    body: JSON.stringify(payload),
++  });
++}
++
++async function readJson(response) {
++  try {
++    return await response.json();
++  } catch {
++    return {};
++  }
++}
+diff --git a/components/EducationTimeline.jsx b/components/EducationTimeline.jsx
+index fb233d7..cabbe7b 100644
+--- a/components/EducationTimeline.jsx
++++ b/components/EducationTimeline.jsx
+@@ -35,8 +35,8 @@ export default function EducationTimeline({ items = [] }) {
+ 
+       <DetailModal
+         isOpen={Boolean(activeItem)}
+-        theme={activeItem?.kind === 'job' ? 'warm' : 'spring'}
+-        eyebrow={activeItem?.kind === 'job' ? 'Work' : 'Education'}
++        theme="fountain"
++        eyebrow={activeItem?.kind === 'job' ? 'Work timeline' : 'Education timeline'}
+         title={activeItem?.title}
+         subtitle={activeItem?.dateLabel}
+         onClose={() => setActiveItemId(null)}
+diff --git a/components/GardenCanvas.jsx b/components/GardenCanvas.jsx
+index 3b81697..38dc436 100644
+--- a/components/GardenCanvas.jsx
++++ b/components/GardenCanvas.jsx
+@@ -11,9 +11,8 @@ import ProjectShowcase from './ProjectShowcase';
+ import WaypointOverlay from './WaypointOverlay';
+ import styles from '../styles/GardenCanvas.module.css';
+ 
+-const ENTRY_CAMERA_POSITION = new THREE.Vector3(4.3, 2.6, 6.2);
+-const BASE_CAMERA_POSITION = new THREE.Vector3(8.6, 5.2, 11.6);
+-const BASE_LOOK_AT = new THREE.Vector3(-0.25, 1.45, 0.8);
++const GARDEN_CAMERA_POSITION = new THREE.Vector3(7.75, 4.25, 10.75);
++const GARDEN_LOOK_AT = new THREE.Vector3(-0.1, 1.35, 1.25);
+ const PARTICLE_COUNT = 120;
+ const PANEL_OPEN_DELAY_MS = 520;
+ 
+@@ -23,7 +22,7 @@ const WAYPOINTS = [
+     label: 'Certifications',
+     theme: 'sakura',
+     anchor: [-3.05, 2.9, -0.85],
+-    focusPosition: [0.85, 4, 5.25],
++    focusPosition: [0.9, 3.65, 5.5],
+     focusLookAt: [-3.05, 2.05, -0.85],
+     color: 'rgba(244, 188, 212, 0.96)',
+     labelColor: 'rgba(255, 246, 251, 0.86)',
+@@ -34,7 +33,7 @@ const WAYPOINTS = [
+     label: 'Projects',
+     theme: 'spring',
+     anchor: [-5.15, 1.75, 2.45],
+-    focusPosition: [-0.7, 3.3, 7.6],
++    focusPosition: [-0.85, 3.1, 7.25],
+     focusLookAt: [-5.15, 1.25, 2.45],
+     color: 'rgba(155, 207, 166, 0.96)',
+     labelColor: 'rgba(245, 255, 247, 0.84)',
+@@ -45,7 +44,7 @@ const WAYPOINTS = [
+     label: 'Education + work',
+     theme: 'fountain',
+     anchor: [2.75, 1.55, 0.4],
+-    focusPosition: [7.25, 3.25, 5.55],
++    focusPosition: [7.05, 3.1, 5.8],
+     focusLookAt: [2.75, 1.15, 0.4],
+     color: 'rgba(166, 212, 244, 0.96)',
+     labelColor: 'rgba(245, 251, 255, 0.84)',
+@@ -56,7 +55,7 @@ const WAYPOINTS = [
+     label: 'Contact kiosk',
+     theme: 'warm',
+     anchor: [1.65, 1.5, 4.2],
+-    focusPosition: [6.15, 3.25, 9.2],
++    focusPosition: [5.9, 3.15, 8.95],
+     focusLookAt: [1.65, 1.15, 4.2],
+     color: 'rgba(231, 198, 150, 0.96)',
+     labelColor: 'rgba(255, 249, 241, 0.84)',
+@@ -237,6 +236,7 @@ function SceneRig({
+   onProjectWaypoints,
+   reducedMotion,
+   invalidateRef,
++  transitionProgress,
+ }) {
+   const rootRef = useRef(null);
+   const canopyRef = useRef(null);
+@@ -254,7 +254,6 @@ function SceneRig({
+     token: 0,
+     waypoint: WAYPOINTS[0],
+   });
+-  const introProgressRef = useRef(reducedMotion ? 1 : 0);
+   const focusAmountRef = useRef(0);
+   const smoothedPointerRef = useRef({ x: 0, y: 0 });
+   const projectionVectorRef = useRef(new THREE.Vector3());
+@@ -349,9 +348,6 @@ function SceneRig({
+       delta,
+     );
+ 
+-    introProgressRef.current = reducedMotion
+-      ? 1
+-      : Math.min(1, introProgressRef.current + delta / 1.18);
+     focusAmountRef.current = THREE.MathUtils.damp(
+       focusAmountRef.current,
+       focusId ? 1 : 0,
+@@ -359,19 +355,15 @@ function SceneRig({
+       delta,
+     );
+ 
+-    const easedIntro = 1 - (1 - introProgressRef.current) ** 3;
++    const easedIntro = reducedMotion ? 1 : transitionProgress;
+     const easedFocus = 1 - (1 - focusAmountRef.current) ** 2;
+ 
+-    cameraPositionRef.current.lerpVectors(
+-      ENTRY_CAMERA_POSITION,
+-      BASE_CAMERA_POSITION,
+-      easedIntro,
+-    );
++    cameraPositionRef.current.copy(GARDEN_CAMERA_POSITION);
+     cameraPositionRef.current.x += smoothedPointer.x * 0.72;
+     cameraPositionRef.current.y += smoothedPointer.y * 0.28;
+     cameraPositionRef.current.z += smoothedPointer.x * 0.32;
+ 
+-    cameraLookRef.current.copy(BASE_LOOK_AT);
++    cameraLookRef.current.copy(GARDEN_LOOK_AT);
+     cameraLookRef.current.x += smoothedPointer.x * 0.48;
+     cameraLookRef.current.y += smoothedPointer.y * 0.18;
+     cameraLookRef.current.z += smoothedPointer.y * 0.42;
+@@ -386,6 +378,8 @@ function SceneRig({
+     }
+ 
+     camera.position.copy(cameraPositionRef.current);
++    camera.fov = THREE.MathUtils.lerp(28, 34, easedIntro);
++    camera.updateProjectionMatrix();
+     camera.lookAt(cameraLookRef.current);
+ 
+     if (rootRef.current) {
+@@ -514,7 +508,6 @@ function SceneRig({
+       Math.abs(pointer.y - smoothedPointer.y) > 0.001;
+ 
+     if (
+-      introProgressRef.current < 1 ||
+       activeParticles > 0 ||
+       pointerIsSettling ||
+       Math.abs(focusAmountRef.current - (focusId ? 1 : 0)) > 0.002
+@@ -694,6 +687,7 @@ export default function GardenCanvas({
+   timelineItems,
+   reducedMotion = false,
+   transitionState = 'idle',
++  transitionProgress = 0,
+   onExit,
+   onModalChange,
+ }) {
+@@ -789,15 +783,27 @@ export default function GardenCanvas({
+ 
+   const activePanel = activePanelId ? PANEL_COPY[activePanelId] : null;
+   const sceneBlocked = Boolean(activePanelId || pendingPanelId);
++  const revealProgress = reducedMotion
++    ? 1
++    : transitionState === 'open'
++      ? 1
++      : transitionState === 'entering'
++        ? transitionProgress
++        : 0;
+ 
+   return (
+     <div
+       id="desktop-garden"
+       className={clsx(styles.overlay, {
+-        [styles.entering]: transitionState === 'entering',
+         [styles.open]: transitionState === 'open',
+         [styles.modalOpen]: sceneBlocked,
+       })}
++      style={{
++        opacity: revealProgress,
++        transform: `scale(${1.03 - revealProgress * 0.03})`,
++        filter: `blur(${(1 - revealProgress) * 10}px) saturate(${0.94 + revealProgress * 0.06})`,
++        pointerEvents: transitionState === 'open' ? 'auto' : 'none',
++      }}
+     >
+       <div
+         className={styles.frame}
+@@ -817,7 +823,7 @@ export default function GardenCanvas({
+         <div className={styles.canvasShell}>
+           <Canvas
+             className={styles.canvas}
+-            camera={{ position: ENTRY_CAMERA_POSITION.toArray(), fov: 36 }}
++            camera={{ position: GARDEN_CAMERA_POSITION.toArray(), fov: 34 }}
+             dpr={typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)}
+             frameloop="demand"
+             gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+@@ -831,6 +837,7 @@ export default function GardenCanvas({
+               onProjectWaypoints={setProjectedWaypoints}
+               reducedMotion={reducedMotion}
+               invalidateRef={invalidateRef}
++              transitionProgress={revealProgress}
+             />
+           </Canvas>
+         </div>
+diff --git a/components/Hero.jsx b/components/Hero.jsx
+index c2d0837..521ef2a 100644
+--- a/components/Hero.jsx
++++ b/components/Hero.jsx
+@@ -18,9 +18,16 @@ export default function Hero({
+   onTicketClick,
+   onTicketIntent,
+   phase = 'idle',
++  zoomProgress = 0,
+   isDesktop = false,
+ }) {
+   const phaseClassName = getHeroPhaseClassName(phase);
++  const imageScale = 1 + zoomProgress * 2.7;
++  const imageTranslateY = zoomProgress * 16;
++  const imageTranslateX = zoomProgress * 1.2;
++  const scrimOpacity = 0.18 + (1 - zoomProgress) * 0.18;
++  const bloomOpacity = 0.28 + zoomProgress * 0.34;
++  const veilOpacity = 0.08 + zoomProgress * 0.34;
+ 
+   return (
+     <section
+@@ -35,15 +42,29 @@ export default function Hero({
+           src={heroImage}
+           alt="Garden gate illustration for Chong Xian's portfolio"
+           className={styles.image}
++          style={{
++            objectFit: isDesktop ? 'contain' : 'cover',
++            objectPosition: isDesktop ? '50% 50%' : '50% 46%',
++            transform: `translate3d(${imageTranslateX}%, ${imageTranslateY}%, 0) scale(${imageScale})`,
++            filter: `saturate(${1 + zoomProgress * 0.14}) brightness(${1 + zoomProgress * 0.08})`,
++          }}
+           fill
+           priority
+           sizes="100vw"
+         />
+       </div>
+ 
+-      <div className={styles.scrim} aria-hidden="true" />
+-      <div className={styles.gateBloom} aria-hidden="true" />
+-      <div className={styles.transitionVeil} aria-hidden="true" />
++      <div className={styles.scrim} style={{ opacity: scrimOpacity }} aria-hidden="true" />
++      <div
++        className={styles.gateBloom}
++        style={{ opacity: bloomOpacity }}
++        aria-hidden="true"
++      />
++      <div
++        className={styles.transitionVeil}
++        style={{ opacity: veilOpacity }}
++        aria-hidden="true"
++      />
+ 
+       <div className={styles.heroGate}>
+         <button
+@@ -58,7 +79,7 @@ export default function Hero({
+           aria-label="Enter Chong Xian's garden with the free ticket"
+           disabled={isDesktop && phase !== 'idle'}
+         >
+-          free ticket
++          FREE TICKET
+         </button>
+       </div>
+     </section>
+diff --git a/components/ProjectShowcase.jsx b/components/ProjectShowcase.jsx
+index ebd1854..a8609e9 100644
+--- a/components/ProjectShowcase.jsx
++++ b/components/ProjectShowcase.jsx
+@@ -4,27 +4,36 @@ import { useState } from 'react';
+ import DetailModal from './DetailModal';
+ import styles from '../styles/ContentPanels.module.css';
+ 
++const PROJECT_ARCHIVE_URL = 'https://github.com/C-X1an?tab=repositories';
++
+ export default function ProjectShowcase({ items = [] }) {
+   const [activeProjectId, setActiveProjectId] = useState(null);
+   const activeProject = items.find((item) => item.id === activeProjectId) || null;
+ 
+   return (
+     <>
++      <div className={styles.searchRow}>
++        <p className={styles.emptyState}>
++          Open a project card for details, or jump to the full repository list in a new tab.
++        </p>
++        <a
++          href={PROJECT_ARCHIVE_URL}
++          target="_blank"
++          rel="noreferrer"
++          className={styles.sectionAction}
++        >
++          View All Projects
++        </a>
++      </div>
++
+       <div className={styles.projectGrid}>
+         {items.map((project) => (
+-          <button
+-            key={project.id}
+-            type="button"
+-            className={styles.projectCard}
+-            onClick={() => setActiveProjectId(project.id)}
+-            aria-haspopup="dialog"
+-            aria-label={`Open details for ${project.title}`}
+-          >
++          <article key={project.id} className={styles.projectCard}>
+             <div className={styles.projectVisual} aria-hidden="true">
+               {project.thumbnailSrc ? (
+                 <Image
+                   src={project.thumbnailSrc}
+-                  alt=""
++                  alt={`${project.title} project preview`}
+                   fill
+                   sizes="(max-width: 720px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                 />
+@@ -44,8 +53,28 @@ export default function ProjectShowcase({ items = [] }) {
+               ))}
+             </div>
+ 
+-            <span className={styles.cardHint}>Open project details</span>
+-          </button>
++            <div className={styles.cardActions}>
++              <button
++                type="button"
++                className={styles.inlineActionButton}
++                onClick={() => setActiveProjectId(project.id)}
++                aria-haspopup="dialog"
++                aria-label={`Open details for ${project.title}`}
++              >
++                Open details
++              </button>
++              {project.repo_url ? (
++                <a
++                  href={project.repo_url}
++                  target="_blank"
++                  rel="noreferrer"
++                  className={styles.subtleLink}
++                >
++                  GitHub
++                </a>
++              ) : null}
++            </div>
++          </article>
+         ))}
+       </div>
+ 
+@@ -74,7 +103,7 @@ export default function ProjectShowcase({ items = [] }) {
+             <div className={styles.detailMediaFrame}>
+               <Image
+                 src={activeProject.thumbnailSrc}
+-                alt=""
++                alt={`${activeProject.title} project preview`}
+                 fill
+                 className={styles.detailMedia}
+                 sizes="(max-width: 900px) 100vw, 60vw"
+diff --git a/pages/api/contact.js b/pages/api/contact.js
+index cfd0fd0..086ae07 100644
+--- a/pages/api/contact.js
++++ b/pages/api/contact.js
+@@ -1,4 +1,6 @@
+-export default function handler(req, res) {
++const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
++
++export default async function handler(req, res) {
+   if (req.method !== 'POST') {
+     res.setHeader('Allow', ['POST']);
+     return res.status(405).json({
+@@ -7,9 +9,97 @@ export default function handler(req, res) {
+     });
+   }
+ 
+-  return res.status(410).json({
+-    ok: false,
+-    message:
+-      'This project posts directly to NEXT_PUBLIC_FORMSPREE_ENDPOINT on the client. A proxy route is not required for the current deployment path.',
+-  });
++  const endpoint =
++    process.env.FORMSPREE_ENDPOINT || process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
++
++  if (!endpoint) {
++    return res.status(500).json({
++      ok: false,
++      message:
++        'Contact delivery is not configured on the server. Add FORMSPREE_ENDPOINT or NEXT_PUBLIC_FORMSPREE_ENDPOINT.',
++    });
++  }
++
++  const payload = sanitizePayload(req.body);
++
++  if (!payload.email || !EMAIL_PATTERN.test(payload.email)) {
++    return res.status(400).json({
++      ok: false,
++      message: 'Enter a valid email address before sending the form.',
++    });
++  }
++
++  if (!payload.message || payload.message.length < 10) {
++    return res.status(400).json({
++      ok: false,
++      message: 'Message should be at least 10 characters.',
++    });
++  }
++
++  try {
++    const upstreamResponse = await fetch(endpoint, {
++      method: 'POST',
++      headers: {
++        Accept: 'application/json',
++        'Content-Type': 'application/json',
++      },
++      body: JSON.stringify(payload),
++    });
++
++    const upstreamPayload = await readUpstream(upstreamResponse);
++
++    if (!upstreamResponse.ok) {
++      return res.status(upstreamResponse.status).json({
++        ok: false,
++        message:
++          upstreamPayload.message ||
++          upstreamPayload.error ||
++          'Form delivery failed through the server-side fallback.',
++      });
++    }
++
++    return res.status(200).json({
++      ok: true,
++      message: 'Message sent through the server-side fallback.',
++    });
++  } catch {
++    return res.status(502).json({
++      ok: false,
++      message:
++        'Both the direct Formspree request and the server-side fallback failed. Use the mail fallback below.',
++    });
++  }
++}
++
++function sanitizePayload(body) {
++  const source =
++    body && typeof body === 'object' && !Array.isArray(body) ? body : {};
++
++  return {
++    name: sanitizeValue(source.name),
++    email: sanitizeValue(source.email),
++    message: sanitizeValue(source.message, true),
++  };
++}
++
++function sanitizeValue(value, preserveLineBreaks = false) {
++  const nextValue = String(value || '').replace(/[<>]/g, '').replace(/\r/g, '');
++
++  if (preserveLineBreaks) {
++    return nextValue
++      .split('\n')
++      .map((line) => line.trim())
++      .join('\n')
++      .trim();
++  }
++
++  return nextValue.replace(/\s+/g, ' ').trim();
++}
++
++async function readUpstream(response) {
++  try {
++    return await response.json();
++  } catch {
++    return {};
++  }
+ }
+diff --git a/pages/certifications.js b/pages/certifications.js
+index 640b869..ff20eef 100644
+--- a/pages/certifications.js
++++ b/pages/certifications.js
+@@ -27,8 +27,8 @@ export default function CertificationsPage({ certifications }) {
+               dialogs.
+             </p>
+             <nav className={styles.pageNav} aria-label="Certification page navigation">
+-              <Link href="/" className={styles.pageNavLink}>
+-                Back home
++              <Link href="/?view=garden" className={styles.pageNavLink}>
++                Back to garden
+               </Link>
+               <Link href="/education" className={styles.pageNavLink}>
+                 Education timeline
+diff --git a/pages/education.js b/pages/education.js
+index 85c3534..64e2e24 100644
+--- a/pages/education.js
++++ b/pages/education.js
+@@ -26,8 +26,8 @@ export default function EducationPage({ timelineItems }) {
+               that opens bullet details on demand without the 3D scene.
+             </p>
+             <nav className={styles.pageNav} aria-label="Education page navigation">
+-              <Link href="/" className={styles.pageNavLink}>
+-                Back home
++              <Link href="/?view=garden" className={styles.pageNavLink}>
++                Back to garden
+               </Link>
+               <Link href="/certifications" className={styles.pageNavLink}>
+                 Certifications
+diff --git a/pages/index.js b/pages/index.js
+index 8e78c7f..6d674f3 100644
+--- a/pages/index.js
++++ b/pages/index.js
+@@ -1,6 +1,7 @@
+ import dynamic from 'next/dynamic';
+ import Head from 'next/head';
+ import Link from 'next/link';
++import { useRouter } from 'next/router';
+ import { useEffect, useRef, useState } from 'react';
+ 
+ import CertificationGrid from '../components/CertificationGrid';
+@@ -13,7 +14,7 @@ import contentStyles from '../styles/ContentPanels.module.css';
+ import styles from '../styles/Hero.module.css';
+ 
+ const DESKTOP_BREAKPOINT = 960;
+-const HERO_TRANSITION_MS = 1550;
++const HERO_TRANSITION_MS = 1650;
+ const loadGardenCanvas = () => import('../components/GardenCanvas');
+ 
+ const GardenCanvas = dynamic(loadGardenCanvas, {
+@@ -26,12 +27,15 @@ const GardenCanvas = dynamic(loadGardenCanvas, {
+ });
+ 
+ export default function HomePage({ certifications, projects, timelineItems }) {
++  const router = useRouter();
+   const [heroPhase, setHeroPhase] = useState('idle');
++  const [heroZoomProgress, setHeroZoomProgress] = useState(0);
+   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+   const [isDesktopViewport, setIsDesktopViewport] = useState(false);
+   const [shouldMountGarden, setShouldMountGarden] = useState(false);
+   const [isModalOpen, setIsModalOpen] = useState(false);
+-  const timerRef = useRef([]);
++  const animationFrameRef = useRef(null);
++  const restoredGardenRef = useRef(false);
+ 
+   useEffect(() => {
+     if (typeof window === 'undefined') {
+@@ -101,22 +105,35 @@ export default function HomePage({ certifications, projects, timelineItems }) {
+       return;
+     }
+ 
+-    clearTimers(timerRef);
++    clearAnimation(animationFrameRef);
+     setIsModalOpen(false);
+     setShouldMountGarden(false);
+     setHeroPhase('idle');
++    setHeroZoomProgress(0);
+   }, [isDesktopViewport]);
+ 
+   useEffect(() => {
+     return () => {
+-      clearTimers(timerRef);
++      clearAnimation(animationFrameRef);
+     };
+   }, []);
+ 
+-  function schedule(callback, delay) {
+-    const timer = window.setTimeout(callback, delay);
+-    timerRef.current.push(timer);
+-  }
++  useEffect(() => {
++    if (
++      !router.isReady ||
++      restoredGardenRef.current ||
++      !isDesktopViewport ||
++      router.query.view !== 'garden'
++    ) {
++      return;
++    }
++
++    restoredGardenRef.current = true;
++    loadGardenCanvas();
++    setShouldMountGarden(true);
++    setHeroZoomProgress(1);
++    setHeroPhase('open');
++  }, [isDesktopViewport, router.isReady, router.query.view]);
+ 
+   function handleMobileFallback() {
+     const contentSection = document.getElementById('mobile-content');
+@@ -147,26 +164,54 @@ export default function HomePage({ certifications, projects, timelineItems }) {
+       return;
+     }
+ 
+-    clearTimers(timerRef);
++    clearAnimation(animationFrameRef);
+     preloadGarden();
+     setShouldMountGarden(true);
+ 
+     if (prefersReducedMotion) {
++      setHeroZoomProgress(1);
+       setHeroPhase('open');
+       return;
+     }
+ 
+     setHeroPhase('entering');
+-    schedule(() => {
++    setHeroZoomProgress(0);
++
++    const startedAt = performance.now();
++
++    function animate(now) {
++      const elapsed = now - startedAt;
++      const linearProgress = Math.min(elapsed / HERO_TRANSITION_MS, 1);
++      const easedProgress =
++        linearProgress < 0.5
++          ? 4 * linearProgress * linearProgress * linearProgress
++          : 1 - ((-2 * linearProgress + 2) ** 3) / 2;
++
++      setHeroZoomProgress(easedProgress);
++
++      if (linearProgress < 1) {
++        animationFrameRef.current = window.requestAnimationFrame(animate);
++        return;
++      }
++
++      animationFrameRef.current = null;
+       setHeroPhase('open');
+-    }, HERO_TRANSITION_MS);
++      setHeroZoomProgress(1);
++    }
++
++    animationFrameRef.current = window.requestAnimationFrame(animate);
+   }
+ 
+   function handleCloseGarden() {
+-    clearTimers(timerRef);
++    clearAnimation(animationFrameRef);
+     setIsModalOpen(false);
+     setShouldMountGarden(false);
++    setHeroZoomProgress(0);
+     setHeroPhase('idle');
++
++    if (router.query.view === 'garden') {
++      router.replace('/', undefined, { shallow: true });
++    }
+   }
+ 
+   return (
+@@ -192,6 +237,7 @@ export default function HomePage({ certifications, projects, timelineItems }) {
+               timelineItems={timelineItems}
+               reducedMotion={prefersReducedMotion}
+               transitionState={heroPhase}
++              transitionProgress={heroZoomProgress}
+               onExit={handleCloseGarden}
+               onModalChange={setIsModalOpen}
+             />
+@@ -201,6 +247,7 @@ export default function HomePage({ certifications, projects, timelineItems }) {
+             onTicketClick={handleHeroTicketClick}
+             onTicketIntent={preloadGarden}
+             phase={heroPhase}
++            zoomProgress={heroZoomProgress}
+             isDesktop={isDesktopViewport}
+           />
+         </section>
+@@ -279,9 +326,11 @@ export default function HomePage({ certifications, projects, timelineItems }) {
+   );
+ }
+ 
+-function clearTimers(timerRef) {
+-  timerRef.current.forEach((timer) => window.clearTimeout(timer));
+-  timerRef.current = [];
++function clearAnimation(animationFrameRef) {
++  if (animationFrameRef.current) {
++    window.cancelAnimationFrame(animationFrameRef.current);
++    animationFrameRef.current = null;
++  }
+ }
+ 
+ export function getStaticProps() {
+diff --git a/styles/ContentPanels.module.css b/styles/ContentPanels.module.css
+index e7078eb..c51db5f 100644
+--- a/styles/ContentPanels.module.css
++++ b/styles/ContentPanels.module.css
+@@ -29,7 +29,8 @@
+ .subtleLink,
+ .sectionAction,
+ .actionLink,
+-.pageNavLink {
++.pageNavLink,
++.inlineActionButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+@@ -49,12 +50,18 @@
+ }
+ 
+ .sectionAction,
+-.actionLink {
++.actionLink,
++.inlineActionButton {
++  border: 1px solid rgba(8, 17, 35, 0.08);
+   background: rgba(8, 17, 35, 0.06);
+   color: #081123;
+   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+ }
+ 
++.inlineActionButton {
++  cursor: pointer;
++}
++
+ .pageNavLink {
+   background: rgba(8, 17, 35, 0.05);
+   color: #081123;
+@@ -63,7 +70,8 @@
+ .subtleLink:hover,
+ .sectionAction:hover,
+ .actionLink:hover,
+-.pageNavLink:hover {
++.pageNavLink:hover,
++.inlineActionButton:hover {
+   transform: translateY(-1px);
+ }
+ 
+@@ -146,7 +154,6 @@
+   gap: 16px;
+   padding: 18px;
+   text-align: left;
+-  cursor: pointer;
+   overflow: hidden;
+   transition:
+     transform 220ms ease,
+@@ -245,6 +252,13 @@
+   font-weight: 700;
+ }
+ 
++.cardActions {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 10px;
++  align-items: center;
++}
++
+ .tagList {
+   display: flex;
+   flex-wrap: wrap;
+@@ -291,7 +305,7 @@
+ 
+ .timelineItem {
+   position: relative;
+-  padding-left: 54px;
++  padding: 6px 0 6px 54px;
+ }
+ 
+ .timelineDot {
+@@ -309,6 +323,15 @@
+ .timelineButton {
+   align-items: center;
+   grid-template-columns: minmax(0, 1fr) auto;
++  cursor: pointer;
++}
++
++.timelineButton:hover,
++.timelineButton:focus-visible {
++  box-shadow:
++    0 28px 60px rgba(8, 17, 35, 0.12),
++    0 0 0 1px rgba(113, 180, 231, 0.34),
++    0 0 24px rgba(113, 180, 231, 0.18);
+ }
+ 
+ .timelineHint {
+diff --git a/styles/DetailModal.module.css b/styles/DetailModal.module.css
+index fcd4a66..cb24693 100644
+--- a/styles/DetailModal.module.css
++++ b/styles/DetailModal.module.css
+@@ -10,9 +10,9 @@
+ }
+ 
+ .dialog {
+-  width: min(64vw, 840px);
++  width: min(74vw, 980px);
+   max-width: calc(100vw - 24px);
+-  max-height: min(78vh, 760px);
++  max-height: min(80vh, 860px);
+   display: grid;
+   grid-template-rows: auto minmax(0, 1fr) auto;
+   gap: 18px;
+@@ -71,11 +71,11 @@
+ .body {
+   min-height: 0;
+   overflow: auto;
+-  padding-right: 4px;
++  padding-right: 2px;
+ }
+ 
+ .body::-webkit-scrollbar {
+-  width: 9px;
++  width: 8px;
+ }
+ 
+ .body::-webkit-scrollbar-track {
+@@ -83,15 +83,15 @@
+ }
+ 
+ .body::-webkit-scrollbar-thumb {
+-  border: 3px solid transparent;
++  border: 2px solid transparent;
+   border-radius: 999px;
+-  background: rgba(96, 108, 126, 0.5);
++  background: rgba(255, 255, 255, 0.3);
+   background-clip: padding-box;
+ }
+ 
+ .body {
+   scrollbar-width: thin;
+-  scrollbar-color: rgba(96, 108, 126, 0.5) transparent;
++  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+ }
+ 
+ .footer {
+diff --git a/styles/GardenCanvas.module.css b/styles/GardenCanvas.module.css
+index 2ff1810..10eefd7 100644
+--- a/styles/GardenCanvas.module.css
++++ b/styles/GardenCanvas.module.css
+@@ -3,22 +3,16 @@
+   inset: 0;
+   z-index: 10;
+   opacity: 0;
+-  transform: scale(1.08);
++  transform: scale(1.03);
+   filter: blur(14px) saturate(0.94);
++  pointer-events: none;
+   transition:
+-    opacity 640ms ease,
+-    transform 1400ms cubic-bezier(0.16, 0.88, 0.2, 1),
+-    filter 780ms ease;
+-}
+-
+-.entering,
+-.open {
+-  opacity: 1;
++    opacity 220ms linear,
++    transform 220ms linear,
++    filter 220ms linear;
+ }
+ 
+ .open {
+-  transform: scale(1);
+-  filter: none;
+   pointer-events: auto;
+ }
+ 
+diff --git a/styles/Hero.module.css b/styles/Hero.module.css
+index 6844e58..3608f49 100644
+--- a/styles/Hero.module.css
++++ b/styles/Hero.module.css
+@@ -24,12 +24,14 @@
+ .heroMedia {
+   position: absolute;
+   inset: 0;
++  background:
++    radial-gradient(circle at 50% 50%, rgba(255, 245, 232, 0.18), transparent 34%),
++    linear-gradient(180deg, #0c1520 0%, #122233 100%);
+ }
+ 
+ .image {
+-  object-fit: cover;
+-  object-position: 50% 42%;
+-  transform-origin: 50% 54%;
++  object-position: 50% 50%;
++  transform-origin: 50% 50%;
+   transform: scale(1);
+   will-change: transform, filter, opacity;
+ }
+@@ -45,25 +47,25 @@
+ .scrim {
+   background:
+     linear-gradient(180deg, rgba(8, 17, 27, 0.06), rgba(8, 17, 27, 0.24)),
+-    radial-gradient(circle at 50% 56%, transparent 0%, rgba(8, 17, 27, 0.12) 46%, rgba(8, 17, 27, 0.34) 100%);
++    radial-gradient(circle at 50% 50%, transparent 0%, rgba(8, 17, 27, 0.12) 46%, rgba(8, 17, 27, 0.34) 100%);
+ }
+ 
+ .gateBloom {
+   background:
+-    radial-gradient(circle at 50% 56%, rgba(255, 240, 221, 0.34), rgba(255, 240, 221, 0.14) 16%, transparent 42%),
+-    radial-gradient(circle at 50% 62%, rgba(245, 198, 220, 0.18), transparent 28%);
++    radial-gradient(circle at 50% 50%, rgba(255, 240, 221, 0.34), rgba(255, 240, 221, 0.14) 16%, transparent 42%),
++    radial-gradient(circle at 50% 58%, rgba(245, 198, 220, 0.18), transparent 28%);
+   mix-blend-mode: screen;
+ }
+ 
+ .transitionVeil {
+   background:
+-    radial-gradient(circle at 50% 57%, transparent 0%, transparent 14%, rgba(8, 17, 27, 0.08) 28%, rgba(8, 17, 27, 0.3) 100%);
++    radial-gradient(circle at 50% 50%, transparent 0%, transparent 14%, rgba(8, 17, 27, 0.08) 28%, rgba(8, 17, 27, 0.3) 100%);
+ }
+ 
+ .heroGate {
+   position: absolute;
+   left: 50%;
+-  top: 58%;
++  top: 50%;
+   display: grid;
+   place-items: center;
+   transform: translate(-50%, -50%);
+@@ -81,8 +83,8 @@
+   color: #25171e;
+   font-size: clamp(0.98rem, 1.1vw, 1.02rem);
+   font-weight: 700;
+-  letter-spacing: 0.05em;
+-  text-transform: none;
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
+   box-shadow:
+     0 20px 38px rgba(8, 17, 27, 0.2),
+     inset 0 1px 0 rgba(255, 255, 255, 0.72);
+@@ -109,22 +111,6 @@
+   cursor: wait;
+ }
+ 
+-.entering .image {
+-  animation: heroZoom 1550ms cubic-bezier(0.16, 0.88, 0.2, 1) forwards;
+-}
+-
+-.entering .scrim {
+-  animation: heroScrim 1550ms ease forwards;
+-}
+-
+-.entering .gateBloom {
+-  animation: heroBloom 1550ms ease forwards;
+-}
+-
+-.entering .transitionVeil {
+-  animation: heroVeil 1550ms ease forwards;
+-}
+-
+ .entering .ticketButton,
+ .open .ticketButton {
+   opacity: 0;
+@@ -236,68 +222,6 @@
+   box-shadow: 0 22px 54px rgba(8, 17, 35, 0.08);
+ }
+ 
+-@keyframes heroZoom {
+-  0% {
+-    transform: scale(1);
+-    filter: saturate(1) brightness(1);
+-  }
+-
+-  62% {
+-    transform: scale(1.44);
+-    filter: saturate(1.03) brightness(1.02);
+-  }
+-
+-  100% {
+-    transform: scale(2.28);
+-    filter: saturate(1.08) brightness(1.05);
+-  }
+-}
+-
+-@keyframes heroScrim {
+-  0% {
+-    opacity: 0.8;
+-  }
+-
+-  70% {
+-    opacity: 0.86;
+-  }
+-
+-  100% {
+-    opacity: 0;
+-  }
+-}
+-
+-@keyframes heroBloom {
+-  0% {
+-    opacity: 0.34;
+-    transform: scale(1);
+-  }
+-
+-  55% {
+-    opacity: 0.78;
+-    transform: scale(1.16);
+-  }
+-
+-  100% {
+-    opacity: 0;
+-    transform: scale(1.34);
+-  }
+-}
+-
+-@keyframes heroVeil {
+-  0% {
+-    opacity: 0.2;
+-  }
+-
+-  70% {
+-    opacity: 0.44;
+-  }
+-
+-  100% {
+-    opacity: 0;
+-  }
+-}
+-
+ @media (max-width: 959px) {
+   .desktopStage {
+     height: 100svh;
+@@ -305,6 +229,7 @@
+   }
+ 
+   .image {
++    object-fit: cover;
+     object-position: 50% 46%;
+   }
+ 
+diff --git a/styles/ModalPanel.module.css b/styles/ModalPanel.module.css
+index de1274c..cfdd50b 100644
+--- a/styles/ModalPanel.module.css
++++ b/styles/ModalPanel.module.css
+@@ -80,14 +80,14 @@
+ 
+ .body {
+   min-height: 0;
+-  padding-right: 6px;
++  padding-right: 2px;
+   overflow: auto;
+   display: grid;
+   gap: 20px;
+ }
+ 
+ .body::-webkit-scrollbar {
+-  width: 10px;
++  width: 8px;
+ }
+ 
+ .body::-webkit-scrollbar-track {
+@@ -95,15 +95,15 @@
+ }
+ 
+ .body::-webkit-scrollbar-thumb {
+-  border: 3px solid transparent;
++  border: 2px solid transparent;
+   border-radius: 999px;
+-  background: rgba(96, 108, 126, 0.54);
++  background: rgba(255, 255, 255, 0.32);
+   background-clip: padding-box;
+ }
+ 
+ .body {
+   scrollbar-width: thin;
+-  scrollbar-color: rgba(96, 108, 126, 0.54) transparent;
++  scrollbar-color: rgba(255, 255, 255, 0.32) transparent;
+ }
+ 
+ .themeSakura {
+diff --git a/styles/WaypointOverlay.module.css b/styles/WaypointOverlay.module.css
+index 27b8fa3..a18bd18 100644
+--- a/styles/WaypointOverlay.module.css
++++ b/styles/WaypointOverlay.module.css
+@@ -2,6 +2,7 @@
+   position: absolute;
+   inset: 0;
+   z-index: 7;
++  overflow: visible;
+ }
+ 
+ .blocked {
+@@ -13,7 +14,7 @@
+   display: inline-flex;
+   align-items: center;
+   gap: 16px;
+-  padding: 0;
++  padding: 10px;
+   border: 0;
+   background: transparent;
+   color: var(--waypoint-ink, #102030);
+@@ -74,23 +75,24 @@
+   white-space: nowrap;
+   box-shadow: 0 16px 28px rgba(8, 17, 35, 0.14);
+   opacity: 0;
++  will-change: transform, opacity;
+   transition:
+-    opacity 180ms ease,
+-    transform 180ms ease;
++    opacity 220ms ease,
++    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+ }
+ 
+ .sideRight .label {
+-  transform: translateX(-10px);
++  transform: translateX(-16px);
+ }
+ 
+ .sideLeft .label {
+-  transform: translateX(10px);
++  transform: translateX(16px);
+ }
+ 
+ .marker:hover .diamond,
+ .marker:focus-visible .diamond,
+ .active .diamond {
+-  transform: rotate(45deg) scale(1.08);
++  transform: rotate(45deg) scale(1.14);
+   box-shadow:
+     0 18px 32px rgba(8, 17, 35, 0.22),
+     0 0 0 14px rgba(255, 255, 255, 0.12);
+diff --git a/styles/globals.css b/styles/globals.css
+index a416de7..3ce940d 100644
+--- a/styles/globals.css
++++ b/styles/globals.css
+@@ -1,10 +1,10 @@
+ :root {
+   color-scheme: light;
+-  --color-bg: #f4efe7;
++  --color-bg: #0b1720;
+   --color-surface: rgba(255, 255, 255, 0.84);
+   --color-surface-strong: #fffaf5;
+   --color-text: #081123;
+-  --color-muted: #51647d;
++  --color-muted: #94a3b8;
+   --color-sakura: #ffb7d5;
+   --color-sakura-soft: #f6d9e8;
+   --color-spring: #8fcb9b;
+diff --git a/tests/hero.test.js b/tests/hero.test.js
+index 34ca9ca..c7d9755 100644
+--- a/tests/hero.test.js
++++ b/tests/hero.test.js
+@@ -12,17 +12,22 @@ try {
+   const gardenSource = readFile('components/GardenCanvas.jsx');
+   const contentSource = readFile('lib/content.js');
+   const contactSource = readFile('components/ContactPanel.jsx');
++  const contactApiSource = readFile('pages/api/contact.js');
++  const projectSource = readFile('components/ProjectShowcase.jsx');
+ 
+-  assert.match(heroSource, />\s*free ticket\s*</);
+-  assert.match(heroSource, /entering/);
++  assert.match(heroSource, />\s*FREE TICKET\s*</);
++  assert.match(heroSource, /objectFit: isDesktop \? 'contain' : 'cover'/);
+   assert.match(pageSource, /const DESKTOP_BREAKPOINT = 960/);
+-  assert.match(pageSource, /loadGardenCanvas/);
+-  assert.match(pageSource, /setShouldMountGarden\(true\)/);
+-  assert.match(gardenSource, /PANEL_OPEN_DELAY_MS/);
++  assert.match(pageSource, /requestAnimationFrame/);
++  assert.match(pageSource, /transitionProgress=\{heroZoomProgress\}/);
++  assert.match(gardenSource, /transitionProgress/);
+   assert.match(gardenSource, /focusId/);
+   assert.match(gardenSource, /WaypointOverlay/);
+   assert.match(contentSource, /getTimelineSortValue\(right\) - getTimelineSortValue\(left\)/);
+   assert.match(contactSource, /NEXT_PUBLIC_FORMSPREE_ENDPOINT/);
++  assert.match(contactSource, /postContact\('\/api\/contact'/);
++  assert.match(contactApiSource, /FORMSPREE_ENDPOINT \|\| process\.env\.NEXT_PUBLIC_FORMSPREE_ENDPOINT/);
++  assert.match(projectSource, /View All Projects/);
+ } catch (error) {
+   console.error(error);
+   process.exitCode = 1;

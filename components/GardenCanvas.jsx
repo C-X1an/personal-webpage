@@ -11,9 +11,8 @@ import ProjectShowcase from './ProjectShowcase';
 import WaypointOverlay from './WaypointOverlay';
 import styles from '../styles/GardenCanvas.module.css';
 
-const ENTRY_CAMERA_POSITION = new THREE.Vector3(4.3, 2.6, 6.2);
-const BASE_CAMERA_POSITION = new THREE.Vector3(8.6, 5.2, 11.6);
-const BASE_LOOK_AT = new THREE.Vector3(-0.25, 1.45, 0.8);
+const GARDEN_CAMERA_POSITION = new THREE.Vector3(7.75, 4.25, 10.75);
+const GARDEN_LOOK_AT = new THREE.Vector3(-0.1, 1.35, 1.25);
 const PARTICLE_COUNT = 120;
 const PANEL_OPEN_DELAY_MS = 520;
 
@@ -23,7 +22,7 @@ const WAYPOINTS = [
     label: 'Certifications',
     theme: 'sakura',
     anchor: [-3.05, 2.9, -0.85],
-    focusPosition: [0.85, 4, 5.25],
+    focusPosition: [0.9, 3.65, 5.5],
     focusLookAt: [-3.05, 2.05, -0.85],
     color: 'rgba(244, 188, 212, 0.96)',
     labelColor: 'rgba(255, 246, 251, 0.86)',
@@ -34,7 +33,7 @@ const WAYPOINTS = [
     label: 'Projects',
     theme: 'spring',
     anchor: [-5.15, 1.75, 2.45],
-    focusPosition: [-0.7, 3.3, 7.6],
+    focusPosition: [-0.85, 3.1, 7.25],
     focusLookAt: [-5.15, 1.25, 2.45],
     color: 'rgba(155, 207, 166, 0.96)',
     labelColor: 'rgba(245, 255, 247, 0.84)',
@@ -45,7 +44,7 @@ const WAYPOINTS = [
     label: 'Education + work',
     theme: 'fountain',
     anchor: [2.75, 1.55, 0.4],
-    focusPosition: [7.25, 3.25, 5.55],
+    focusPosition: [7.05, 3.1, 5.8],
     focusLookAt: [2.75, 1.15, 0.4],
     color: 'rgba(166, 212, 244, 0.96)',
     labelColor: 'rgba(245, 251, 255, 0.84)',
@@ -56,7 +55,7 @@ const WAYPOINTS = [
     label: 'Contact kiosk',
     theme: 'warm',
     anchor: [1.65, 1.5, 4.2],
-    focusPosition: [6.15, 3.25, 9.2],
+    focusPosition: [5.9, 3.15, 8.95],
     focusLookAt: [1.65, 1.15, 4.2],
     color: 'rgba(231, 198, 150, 0.96)',
     labelColor: 'rgba(255, 249, 241, 0.84)',
@@ -237,6 +236,7 @@ function SceneRig({
   onProjectWaypoints,
   reducedMotion,
   invalidateRef,
+  transitionProgress,
 }) {
   const rootRef = useRef(null);
   const canopyRef = useRef(null);
@@ -254,7 +254,6 @@ function SceneRig({
     token: 0,
     waypoint: WAYPOINTS[0],
   });
-  const introProgressRef = useRef(reducedMotion ? 1 : 0);
   const focusAmountRef = useRef(0);
   const smoothedPointerRef = useRef({ x: 0, y: 0 });
   const projectionVectorRef = useRef(new THREE.Vector3());
@@ -349,9 +348,6 @@ function SceneRig({
       delta,
     );
 
-    introProgressRef.current = reducedMotion
-      ? 1
-      : Math.min(1, introProgressRef.current + delta / 1.18);
     focusAmountRef.current = THREE.MathUtils.damp(
       focusAmountRef.current,
       focusId ? 1 : 0,
@@ -359,19 +355,15 @@ function SceneRig({
       delta,
     );
 
-    const easedIntro = 1 - (1 - introProgressRef.current) ** 3;
+    const easedIntro = reducedMotion ? 1 : transitionProgress;
     const easedFocus = 1 - (1 - focusAmountRef.current) ** 2;
 
-    cameraPositionRef.current.lerpVectors(
-      ENTRY_CAMERA_POSITION,
-      BASE_CAMERA_POSITION,
-      easedIntro,
-    );
+    cameraPositionRef.current.copy(GARDEN_CAMERA_POSITION);
     cameraPositionRef.current.x += smoothedPointer.x * 0.72;
     cameraPositionRef.current.y += smoothedPointer.y * 0.28;
     cameraPositionRef.current.z += smoothedPointer.x * 0.32;
 
-    cameraLookRef.current.copy(BASE_LOOK_AT);
+    cameraLookRef.current.copy(GARDEN_LOOK_AT);
     cameraLookRef.current.x += smoothedPointer.x * 0.48;
     cameraLookRef.current.y += smoothedPointer.y * 0.18;
     cameraLookRef.current.z += smoothedPointer.y * 0.42;
@@ -386,6 +378,8 @@ function SceneRig({
     }
 
     camera.position.copy(cameraPositionRef.current);
+    camera.fov = THREE.MathUtils.lerp(28, 34, easedIntro);
+    camera.updateProjectionMatrix();
     camera.lookAt(cameraLookRef.current);
 
     if (rootRef.current) {
@@ -514,7 +508,6 @@ function SceneRig({
       Math.abs(pointer.y - smoothedPointer.y) > 0.001;
 
     if (
-      introProgressRef.current < 1 ||
       activeParticles > 0 ||
       pointerIsSettling ||
       Math.abs(focusAmountRef.current - (focusId ? 1 : 0)) > 0.002
@@ -694,6 +687,7 @@ export default function GardenCanvas({
   timelineItems,
   reducedMotion = false,
   transitionState = 'idle',
+  transitionProgress = 0,
   onExit,
   onModalChange,
 }) {
@@ -789,15 +783,27 @@ export default function GardenCanvas({
 
   const activePanel = activePanelId ? PANEL_COPY[activePanelId] : null;
   const sceneBlocked = Boolean(activePanelId || pendingPanelId);
+  const revealProgress = reducedMotion
+    ? 1
+    : transitionState === 'open'
+      ? 1
+      : transitionState === 'entering'
+        ? transitionProgress
+        : 0;
 
   return (
     <div
       id="desktop-garden"
       className={clsx(styles.overlay, {
-        [styles.entering]: transitionState === 'entering',
         [styles.open]: transitionState === 'open',
         [styles.modalOpen]: sceneBlocked,
       })}
+      style={{
+        opacity: revealProgress,
+        transform: `scale(${1.03 - revealProgress * 0.03})`,
+        filter: `blur(${(1 - revealProgress) * 10}px) saturate(${0.94 + revealProgress * 0.06})`,
+        pointerEvents: transitionState === 'open' ? 'auto' : 'none',
+      }}
     >
       <div
         className={styles.frame}
@@ -817,7 +823,7 @@ export default function GardenCanvas({
         <div className={styles.canvasShell}>
           <Canvas
             className={styles.canvas}
-            camera={{ position: ENTRY_CAMERA_POSITION.toArray(), fov: 36 }}
+            camera={{ position: GARDEN_CAMERA_POSITION.toArray(), fov: 34 }}
             dpr={typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)}
             frameloop="demand"
             gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
@@ -831,6 +837,7 @@ export default function GardenCanvas({
               onProjectWaypoints={setProjectedWaypoints}
               reducedMotion={reducedMotion}
               invalidateRef={invalidateRef}
+              transitionProgress={revealProgress}
             />
           </Canvas>
         </div>

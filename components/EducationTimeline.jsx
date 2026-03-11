@@ -35,8 +35,8 @@ export default function EducationTimeline({ items = [] }) {
 
       <DetailModal
         isOpen={Boolean(activeItem)}
-        theme={activeItem?.kind === 'job' ? 'warm' : 'spring'}
-        eyebrow={activeItem?.kind === 'job' ? 'Work' : 'Education'}
+        theme="fountain"
+        eyebrow={activeItem?.kind === 'job' ? 'Work timeline' : 'Education timeline'}
         title={activeItem?.title}
         subtitle={activeItem?.dateLabel}
         onClose={() => setActiveItemId(null)}

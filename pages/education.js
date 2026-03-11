@@ -26,8 +26,8 @@ export default function EducationPage({ timelineItems }) {
               that opens bullet details on demand without the 3D scene.
             </p>
             <nav className={styles.pageNav} aria-label="Education page navigation">
-              <Link href="/" className={styles.pageNavLink}>
-                Back home
+              <Link href="/?view=garden" className={styles.pageNavLink}>
+                Back to garden
               </Link>
               <Link href="/certifications" className={styles.pageNavLink}>
                 Certifications

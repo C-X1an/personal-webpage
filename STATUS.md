@@ -6,7 +6,7 @@ This file records human-readable progress checkpoints for the Codex agent. Codex
 ---
 
 ## Last update
-- **timestamp:** 2026-03-11T21:06:29.1961096+08:00
+- **timestamp:** 2026-03-11T22:47:50.1064687+08:00
 - **agent:** codex (automated)
 
 ---
@@ -56,3 +56,5 @@ To resume, open the repo and run `git status`, then run `npm run dev`. Codex wil
 2026-03-11T19:44:31.5402985+08:00: Completed `task_04_refine_hero_zoom_and_garden_camera`. Feature commit `ac511c9` passed `npm ci`, `npm run lint`, `npm run build`, and `npm test` before push to `origin/main`. Scope delivered: dramatic hero zoom flow, desktop birds-eye garden camera with projected waypoints and themed modal panels, mobile 2D content sections/routes, contact Formspree client wiring, and smoke coverage. Remaining unrelated local changes: `.gitignore`, `package.json`, and `package-lock.json`.
 
 2026-03-11T21:06:29.1961096+08:00: Completed the combined Task 03/04 UX rewrite in the current workspace state. Scope delivered: full-viewport hero with the lowercase `free ticket` CTA centered in the gate, single-stage hero-to-garden handoff, desktop-only procedural 3D garden POC with persistent camera parallax and projected waypoints, nested certification/project/timeline detail dialogs, direct Formspree client wiring, updated mobile 2D sections, and `docs/asset-sources.md`. Build summary: `npm ci` passed with `0 vulnerabilities`; `npm run lint`, `npm run build`, `npm test`, and a local `next start` smoke check for `/`, `/certifications`, and `/education` all passed. Preview URL: pending remote deployment after push to `origin/main`.
+
+2026-03-11T22:47:50.1064687+08:00: Refined `task_04_add_hero_image_and_cta_behavior` into the requested production polish pass. The desktop hero now keeps the full gate visible with a centered uppercase `FREE TICKET` button and drives a single `requestAnimationFrame` tween into the garden handoff while the desktop canvas preloads behind the scene. The garden opens at a slightly elevated side view with persistent mouse pan, waypoint labels slide out from larger anchored diamonds, certification/project/timeline panels use centered 70-80% viewport modals with thin translucent custom scrollbars, certificate previews stay in-modal, `View All Projects` opens in a new tab, standalone archive pages return to `/?view=garden`, and the contact form now retries through `/api/contact` if direct Formspree POSTs fail. Validation summary: `npm ci`, `npm run lint`, `npm run build`, and `npm test` all passed; an escalated `npm run dev` smoke check returned `200` for `/`, `/?view=garden`, `/certifications`, and `/education`, and `GET /api/contact` returned the expected `405`. Preview URL remains pending the post-push Vercel deployment.

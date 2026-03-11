@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import { useDeferredValue, useState } from 'react';
 
 import DetailModal from './DetailModal';
@@ -43,9 +42,9 @@ export default function CertificationGrid({
           </div>
 
           {showArchiveAction ? (
-            <Link href={archiveHref} className={styles.sectionAction}>
+            <a href={archiveHref} className={styles.sectionAction}>
               View all certifications
-            </Link>
+            </a>
           ) : null}
         </div>
 
@@ -56,14 +55,7 @@ export default function CertificationGrid({
         ) : (
           <div className={styles.certGrid}>
             {filteredItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={styles.certCard}
-                onClick={() => setActiveCertificationId(item.id)}
-                aria-haspopup="dialog"
-                aria-label={`View ${item.title} certificate`}
-              >
+              <article key={item.id} className={styles.certCard}>
                 <div className={styles.certThumbFrame}>
                   {item.imageSrc ? (
                     <Image
@@ -82,8 +74,23 @@ export default function CertificationGrid({
                   <span className={styles.metaLine}>{item.date}</span>
                 </div>
 
-                <span className={styles.cardHint}>View certificate</span>
-              </button>
+                <div className={styles.cardActions}>
+                  <button
+                    type="button"
+                    className={styles.inlineActionButton}
+                    onClick={() => setActiveCertificationId(item.id)}
+                    aria-haspopup="dialog"
+                    aria-label={`View ${item.title} certificate`}
+                  >
+                    View Certificate
+                  </button>
+                  {item.fileSrc ? (
+                    <a href={item.fileSrc} download className={styles.subtleLink}>
+                      Download
+                    </a>
+                  ) : null}
+                </div>
+              </article>
             ))}
           </div>
         )}
@@ -116,6 +123,7 @@ export default function CertificationGrid({
                 alt={`${activeCertification.title} enlarged certificate preview`}
                 className={styles.detailMedia}
                 fill
+                priority
                 sizes="(max-width: 900px) 100vw, 60vw"
               />
             ) : (

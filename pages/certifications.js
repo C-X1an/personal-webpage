@@ -27,8 +27,8 @@ export default function CertificationsPage({ certifications }) {
               dialogs.
             </p>
             <nav className={styles.pageNav} aria-label="Certification page navigation">
-              <Link href="/" className={styles.pageNavLink}>
-                Back home
+              <Link href="/?view=garden" className={styles.pageNavLink}>
+                Back to garden
               </Link>
               <Link href="/education" className={styles.pageNavLink}>
                 Education timeline

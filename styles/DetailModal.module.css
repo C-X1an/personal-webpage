@@ -10,9 +10,9 @@
 }
 
 .dialog {
-  width: min(64vw, 840px);
+  width: min(74vw, 980px);
   max-width: calc(100vw - 24px);
-  max-height: min(78vh, 760px);
+  max-height: min(80vh, 860px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 18px;
@@ -71,11 +71,11 @@
 .body {
   min-height: 0;
   overflow: auto;
-  padding-right: 4px;
+  padding-right: 2px;
 }
 
 .body::-webkit-scrollbar {
-  width: 9px;
+  width: 8px;
 }
 
 .body::-webkit-scrollbar-track {
@@ -83,15 +83,15 @@
 }
 
 .body::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
+  border: 2px solid transparent;
   border-radius: 999px;
-  background: rgba(96, 108, 126, 0.5);
+  background: rgba(255, 255, 255, 0.3);
   background-clip: padding-box;
 }
 
 .body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(96, 108, 126, 0.5) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
 .footer {

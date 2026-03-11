@@ -29,7 +29,8 @@
 .subtleLink,
 .sectionAction,
 .actionLink,
-.pageNavLink {
+.pageNavLink,
+.inlineActionButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -49,10 +50,16 @@
 }
 
 .sectionAction,
-.actionLink {
+.actionLink,
+.inlineActionButton {
+  border: 1px solid rgba(8, 17, 35, 0.08);
   background: rgba(8, 17, 35, 0.06);
   color: #081123;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
+.inlineActionButton {
+  cursor: pointer;
 }
 
 .pageNavLink {
@@ -63,7 +70,8 @@
 .subtleLink:hover,
 .sectionAction:hover,
 .actionLink:hover,
-.pageNavLink:hover {
+.pageNavLink:hover,
+.inlineActionButton:hover {
   transform: translateY(-1px);
 }
 
@@ -146,7 +154,6 @@
   gap: 16px;
   padding: 18px;
   text-align: left;
-  cursor: pointer;
   overflow: hidden;
   transition:
     transform 220ms ease,
@@ -245,6 +252,13 @@
   font-weight: 700;
 }
 
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 .tagList {
   display: flex;
   flex-wrap: wrap;
@@ -291,7 +305,7 @@
 
 .timelineItem {
   position: relative;
-  padding-left: 54px;
+  padding: 6px 0 6px 54px;
 }
 
 .timelineDot {
@@ -309,6 +323,15 @@
 .timelineButton {
   align-items: center;
   grid-template-columns: minmax(0, 1fr) auto;
+  cursor: pointer;
+}
+
+.timelineButton:hover,
+.timelineButton:focus-visible {
+  box-shadow:
+    0 28px 60px rgba(8, 17, 35, 0.12),
+    0 0 0 1px rgba(113, 180, 231, 0.34),
+    0 0 24px rgba(113, 180, 231, 0.18);
 }
 
 .timelineHint {

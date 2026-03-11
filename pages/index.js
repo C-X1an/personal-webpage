@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 
 import CertificationGrid from '../components/CertificationGrid';
@@ -13,7 +14,7 @@ import contentStyles from '../styles/ContentPanels.module.css';
 import styles from '../styles/Hero.module.css';
 
 const DESKTOP_BREAKPOINT = 960;
-const HERO_TRANSITION_MS = 1550;
+const HERO_TRANSITION_MS = 1650;
 const loadGardenCanvas = () => import('../components/GardenCanvas');
 
 const GardenCanvas = dynamic(loadGardenCanvas, {
@@ -26,12 +27,15 @@ const GardenCanvas = dynamic(loadGardenCanvas, {
 });
 
 export default function HomePage({ certifications, projects, timelineItems }) {
+  const router = useRouter();
   const [heroPhase, setHeroPhase] = useState('idle');
+  const [heroZoomProgress, setHeroZoomProgress] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isDesktopViewport, setIsDesktopViewport] = useState(false);
   const [shouldMountGarden, setShouldMountGarden] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const timerRef = useRef([]);
+  const animationFrameRef = useRef(null);
+  const restoredGardenRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -101,22 +105,35 @@ export default function HomePage({ certifications, projects, timelineItems }) {
       return;
     }
 
-    clearTimers(timerRef);
+    clearAnimation(animationFrameRef);
     setIsModalOpen(false);
     setShouldMountGarden(false);
     setHeroPhase('idle');
+    setHeroZoomProgress(0);
   }, [isDesktopViewport]);
 
   useEffect(() => {
     return () => {
-      clearTimers(timerRef);
+      clearAnimation(animationFrameRef);
     };
   }, []);
 
-  function schedule(callback, delay) {
-    const timer = window.setTimeout(callback, delay);
-    timerRef.current.push(timer);
-  }
+  useEffect(() => {
+    if (
+      !router.isReady ||
+      restoredGardenRef.current ||
+      !isDesktopViewport ||
+      router.query.view !== 'garden'
+    ) {
+      return;
+    }
+
+    restoredGardenRef.current = true;
+    loadGardenCanvas();
+    setShouldMountGarden(true);
+    setHeroZoomProgress(1);
+    setHeroPhase('open');
+  }, [isDesktopViewport, router.isReady, router.query.view]);
 
   function handleMobileFallback() {
     const contentSection = document.getElementById('mobile-content');
@@ -147,26 +164,54 @@ export default function HomePage({ certifications, projects, timelineItems }) {
       return;
     }
 
-    clearTimers(timerRef);
+    clearAnimation(animationFrameRef);
     preloadGarden();
     setShouldMountGarden(true);
 
     if (prefersReducedMotion) {
+      setHeroZoomProgress(1);
       setHeroPhase('open');
       return;
     }
 
     setHeroPhase('entering');
-    schedule(() => {
+    setHeroZoomProgress(0);
+
+    const startedAt = performance.now();
+
+    function animate(now) {
+      const elapsed = now - startedAt;
+      const linearProgress = Math.min(elapsed / HERO_TRANSITION_MS, 1);
+      const easedProgress =
+        linearProgress < 0.5
+          ? 4 * linearProgress * linearProgress * linearProgress
+          : 1 - ((-2 * linearProgress + 2) ** 3) / 2;
+
+      setHeroZoomProgress(easedProgress);
+
+      if (linearProgress < 1) {
+        animationFrameRef.current = window.requestAnimationFrame(animate);
+        return;
+      }
+
+      animationFrameRef.current = null;
       setHeroPhase('open');
-    }, HERO_TRANSITION_MS);
+      setHeroZoomProgress(1);
+    }
+
+    animationFrameRef.current = window.requestAnimationFrame(animate);
   }
 
   function handleCloseGarden() {
-    clearTimers(timerRef);
+    clearAnimation(animationFrameRef);
     setIsModalOpen(false);
     setShouldMountGarden(false);
+    setHeroZoomProgress(0);
     setHeroPhase('idle');
+
+    if (router.query.view === 'garden') {
+      router.replace('/', undefined, { shallow: true });
+    }
   }
 
   return (
@@ -192,6 +237,7 @@ export default function HomePage({ certifications, projects, timelineItems }) {
               timelineItems={timelineItems}
               reducedMotion={prefersReducedMotion}
               transitionState={heroPhase}
+              transitionProgress={heroZoomProgress}
               onExit={handleCloseGarden}
               onModalChange={setIsModalOpen}
             />
@@ -201,6 +247,7 @@ export default function HomePage({ certifications, projects, timelineItems }) {
             onTicketClick={handleHeroTicketClick}
             onTicketIntent={preloadGarden}
             phase={heroPhase}
+            zoomProgress={heroZoomProgress}
             isDesktop={isDesktopViewport}
           />
         </section>
@@ -279,9 +326,11 @@ export default function HomePage({ certifications, projects, timelineItems }) {
   );
 }
 
-function clearTimers(timerRef) {
-  timerRef.current.forEach((timer) => window.clearTimeout(timer));
-  timerRef.current = [];
+function clearAnimation(animationFrameRef) {
+  if (animationFrameRef.current) {
+    window.cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = null;
+  }
 }
 
 export function getStaticProps() {
