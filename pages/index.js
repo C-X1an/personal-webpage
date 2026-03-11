@@ -1,27 +1,149 @@
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import ContactForm from '../components/ContactForm';
 import Hero from '../components/Hero';
-import styles from '../styles/Home.module.css';
+import styles from '../styles/Hero.module.css';
 
-const PLACEHOLDER_MESSAGE =
-  'Free ticket selected. The zoom transition and desktop garden loader will be wired in the next task.';
+const GardenCanvas = dynamic(() => import('../components/GardenCanvas'), {
+  ssr: false,
+  loading: () => (
+    <div className={styles.gardenLoading} aria-live="polite">
+      <span className={styles.loadingOrb} aria-hidden="true" />
+      <span>Opening garden...</span>
+    </div>
+  ),
+});
+
+const DESKTOP_QUERY = '(min-width: 900px)';
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+const HERO_ZOOM_DURATION_MS = 600;
+
+const fallbackCards = [
+  {
+    id: 'projects',
+    title: 'Projects',
+    body:
+      'PR Brief and Driftline stay reachable in the 2D path while the 3D pavilion remains desktop-only.',
+  },
+  {
+    id: 'certifications',
+    title: 'Certifications',
+    body:
+      'CS50 Cybersecurity, CS50AI, CS50P, and CS50x anchor the sakura branch for the first mobile pass.',
+  },
+  {
+    id: 'timeline',
+    title: 'Education and Work',
+    body:
+      'TMJC, NTU, and Setsco Services map to the timeline and fountain panels for later tasks.',
+  },
+  {
+    id: 'contact',
+    title: 'Contact',
+    body:
+      'The kiosk remains a simple HTML section on smaller screens so the first entry flow stays lightweight.',
+  },
+];
 
 export default function HomePage() {
-  const [heroStatus, setHeroStatus] = useState('');
+  const [heroPhase, setHeroPhase] = useState('idle');
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [shouldMountGarden, setShouldMountGarden] = useState(false);
+  const zoomTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const motionQuery = window.matchMedia(REDUCED_MOTION_QUERY);
+    const syncMotionPreference = (event) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    syncMotionPreference(motionQuery);
+
+    if (motionQuery.addEventListener) {
+      motionQuery.addEventListener('change', syncMotionPreference);
+
+      return () => {
+        motionQuery.removeEventListener('change', syncMotionPreference);
+      };
+    }
+
+    motionQuery.addListener(syncMotionPreference);
+
+    return () => {
+      motionQuery.removeListener(syncMotionPreference);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined' || !shouldMountGarden) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [shouldMountGarden]);
+
+  useEffect(() => {
+    return () => {
+      if (zoomTimerRef.current) {
+        clearTimeout(zoomTimerRef.current);
+      }
+    };
+  }, []);
 
   function handleHeroTicketClick() {
-    setHeroStatus(PLACEHOLDER_MESSAGE);
+    if (heroPhase !== 'idle' || shouldMountGarden || typeof window === 'undefined') {
+      return;
+    }
+
+    setHeroPhase('zooming');
+
+    if (zoomTimerRef.current) {
+      clearTimeout(zoomTimerRef.current);
+    }
+
+    zoomTimerRef.current = window.setTimeout(() => {
+      if (window.matchMedia(DESKTOP_QUERY).matches) {
+        setShouldMountGarden(true);
+        setHeroPhase('garden');
+        return;
+      }
+
+      const contentSection = document.getElementById('content');
+      contentSection?.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      });
+
+      setHeroPhase('idle');
+    }, prefersReducedMotion ? 0 : HERO_ZOOM_DURATION_MS);
+  }
+
+  function handleCloseGarden() {
+    if (zoomTimerRef.current) {
+      clearTimeout(zoomTimerRef.current);
+    }
+
+    setShouldMountGarden(false);
+    setHeroPhase('idle');
   }
 
   return (
     <>
       <Head>
-        <title>Chong Xian | Portfolio Garden</title>
+        <title>Chong Xian | Garden Entry</title>
         <meta
           name="description"
-          content="Portfolio site for Chong Xian with a desktop garden experience and an accessible mobile fallback."
+          content="Fullscreen hero entry into Chong Xian's garden portfolio with a desktop-only procedural scene."
         />
         <meta
           name="viewport"
@@ -29,31 +151,43 @@ export default function HomePage() {
         />
       </Head>
 
-      <main className={styles.page}>
-        <Hero
-          onTicketClick={handleHeroTicketClick}
-          statusMessage={heroStatus}
-        />
+      <main className={styles.pageShell}>
+        <section className={styles.heroViewport}>
+          <Hero
+            onTicketClick={handleHeroTicketClick}
+            isTransitioning={heroPhase !== 'idle'}
+            isGardenOpen={shouldMountGarden}
+          />
 
-        <section className={styles.previewSection} aria-labelledby="site-preview">
-          <div className={styles.copyBlock}>
-            <p className={styles.eyebrow}>Desktop-first preview</p>
-            <h2 id="site-preview" className={styles.heading}>
-              The hero is ready for the garden handoff.
-            </h2>
-            <p className={styles.lead}>
-              This scaffold keeps the first task focused on the Pages Router
-              setup, the accessible hero CTA, and the contact surface that will
-              be wired to Formspree in a later task.
+          {shouldMountGarden ? (
+            <GardenCanvas onExit={handleCloseGarden} />
+          ) : null}
+        </section>
+
+        <section
+          id="content"
+          className={styles.contentSection}
+          aria-labelledby="content-title"
+        >
+          <div className={styles.contentHeader}>
+            <p className={styles.contentEyebrow}>2D fallback</p>
+            <h1 id="content-title" className={styles.contentTitle}>
+              Garden content stays reachable without the canvas.
+            </h1>
+            <p className={styles.contentLead}>
+              Smaller viewports skip WebGL entirely and land here after the hero
+              zoom so the portfolio remains fast, readable, and keyboard-safe.
             </p>
-            <ul className={styles.featureList}>
-              <li>Desktop 3D canvas remains lazy and out of the critical path.</li>
-              <li>Mobile keeps a readable HTML-first layout without canvas code.</li>
-              <li>Contact delivery is intentionally placeholder-only for now.</li>
-            </ul>
           </div>
 
-          <ContactForm />
+          <div className={styles.cardGrid}>
+            {fallbackCards.map((card) => (
+              <article key={card.id} className={styles.contentCard}>
+                <h2 className={styles.cardTitle}>{card.title}</h2>
+                <p className={styles.cardBody}>{card.body}</p>
+              </article>
+            ))}
+          </div>
         </section>
       </main>
     </>

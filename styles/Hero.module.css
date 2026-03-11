@@ -1,17 +1,33 @@
+.pageShell {
+  width: 100%;
+  overflow-x: clip;
+}
+
+.heroViewport {
+  position: relative;
+  min-height: 100vh;
+}
+
 .hero {
   position: relative;
-  isolation: isolate;
-  width: min(1160px, 100%);
-  min-height: clamp(540px, 78vh, 820px);
-  margin: 0 auto 24px;
-  border-radius: var(--radius-lg);
+  width: 100vw;
+  height: 100vh;
   overflow: clip;
-  box-shadow: 0 30px 80px rgba(8, 17, 35, 0.2);
+  isolation: isolate;
+  background: #0b1720;
+  transform-origin: 50% 56%;
+  transition:
+    transform 600ms cubic-bezier(0.2, 0.9, 0.22, 1),
+    filter 600ms ease,
+    opacity 320ms ease;
 }
 
 .imageFrame {
   position: absolute;
   inset: 0;
+  transition:
+    transform 600ms cubic-bezier(0.2, 0.9, 0.22, 1),
+    filter 600ms ease;
 }
 
 .image {
@@ -19,92 +35,430 @@
   object-position: center;
 }
 
-.overlay {
+.heroTint {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(7, 14, 28, 0.12), rgba(7, 14, 28, 0.54)),
-    linear-gradient(120deg, rgba(255, 183, 213, 0.12), transparent 48%);
+    linear-gradient(180deg, rgba(10, 17, 30, 0.16), rgba(10, 17, 30, 0.32)),
+    radial-gradient(circle at center, transparent 0%, rgba(10, 17, 30, 0.12) 62%);
+  transition:
+    opacity 600ms ease,
+    transform 600ms cubic-bezier(0.2, 0.9, 0.22, 1);
 }
 
-.content {
-  position: relative;
-  z-index: 1;
-  min-height: inherit;
+.heroGlow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 54%, rgba(255, 244, 226, 0.18), transparent 24%),
+    radial-gradient(circle at 50% 72%, rgba(246, 217, 232, 0.18), transparent 20%);
+  mix-blend-mode: screen;
+  transition:
+    opacity 600ms ease,
+    transform 600ms cubic-bezier(0.2, 0.9, 0.22, 1);
+}
+
+.heroCenter {
+  position: absolute;
+  inset: 0;
   display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 16px;
-  padding: 48px 24px;
-  text-align: center;
-  color: #fffaf6;
-}
-
-.eyebrow {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-
-.title {
-  max-width: 12ch;
-  margin: 0;
-  font-size: clamp(3rem, 8vw, 5.75rem);
-  line-height: 0.95;
-}
-
-.summary {
-  max-width: 52ch;
-  margin: 0;
-  font-size: clamp(1rem, 1.6vw, 1.18rem);
-  line-height: 1.7;
-  color: rgba(255, 250, 246, 0.88);
+  place-items: center;
+  padding: 24px;
 }
 
 .ticketButton {
-  min-width: 180px;
-  min-height: 56px;
-  padding: 14px 28px;
-  border: 0;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #fff5e7 0%, #ffd2df 100%);
-  color: #081123;
+  min-width: clamp(168px, 18vw, 210px);
+  padding: 14px 22px;
+  border: 1px solid rgba(95, 65, 78, 0.18);
+  border-radius: 16px;
+  background: rgba(246, 217, 232, 0.78);
+  color: #2d1f26;
+  font-size: clamp(0.98rem, 1.8vw, 1.08rem);
   font-weight: 700;
   letter-spacing: 0.03em;
-  box-shadow: 0 18px 30px rgba(8, 17, 35, 0.2);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 18px 34px rgba(25, 31, 44, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    opacity 220ms ease;
 }
 
 .ticketButton:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 24px 42px rgba(8, 17, 35, 0.24);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow:
+    0 24px 40px rgba(25, 31, 44, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
-.status {
-  min-height: 1.5rem;
-  margin: 0;
-  max-width: 40ch;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: rgba(255, 250, 246, 0.86);
+.ticketButton:active {
+  transform: scale(0.99);
+}
+
+.heroTransitioning {
+  transform: scale(1.06);
+  filter: saturate(1.04);
+}
+
+.heroTransitioning .imageFrame {
+  transform: scale(1.16);
+  filter: brightness(1.04);
+}
+
+.heroTransitioning .heroTint {
+  opacity: 0.52;
+  transform: scale(1.04);
+}
+
+.heroTransitioning .heroGlow {
+  opacity: 0.74;
+  transform: scale(1.12);
+}
+
+.heroTransitioning .ticketButton,
+.heroGardenOpen .ticketButton {
   opacity: 0;
-  transition: opacity 180ms ease;
+  pointer-events: none;
+  transform: scale(0.96);
 }
 
-.statusVisible {
+.heroGardenOpen {
+  opacity: 0.12;
+}
+
+.gardenOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background:
+    radial-gradient(circle at top, rgba(255, 245, 232, 0.26), transparent 34%),
+    linear-gradient(180deg, rgba(225, 238, 232, 0.96), rgba(205, 226, 218, 0.98));
+}
+
+.gardenFrame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.gardenCanvas,
+.gardenFallbackCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.gardenLoading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  color: #132436;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.36), transparent 34%),
+    linear-gradient(180deg, rgba(233, 241, 236, 0.76), rgba(216, 229, 223, 0.88));
+}
+
+.loadingOrb {
+  width: 18px;
+  height: 18px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: rgba(246, 217, 232, 0.92);
+  box-shadow: 0 0 0 0 rgba(246, 217, 232, 0.58);
+  animation: loadingPulse 1.4s ease-out infinite;
+}
+
+.waypointLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+.waypointLayerBlocked {
+  pointer-events: none;
+}
+
+.waypoint {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: #102030;
+  transform: translate(-50%, -50%);
+}
+
+.waypointDiamond {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  background: rgba(129, 144, 167, 0.86);
+  box-shadow:
+    0 10px 24px rgba(8, 17, 35, 0.18),
+    0 0 0 0 rgba(255, 255, 255, 0.3);
+  transform: rotate(45deg);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.waypointDiamond::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.waypointDiamond[data-theme='sakura'] {
+  background: rgba(226, 148, 187, 0.92);
+}
+
+.waypointDiamond[data-theme='spring'] {
+  background: rgba(129, 181, 139, 0.92);
+}
+
+.waypointDiamond[data-theme='fountain'] {
+  background: rgba(121, 174, 207, 0.92);
+}
+
+.waypointDiamond[data-theme='warm'] {
+  background: rgba(197, 155, 103, 0.92);
+}
+
+.waypointLabel {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(255, 251, 246, 0.92);
+  color: #102030;
+  font-size: 0.88rem;
+  font-weight: 600;
+  opacity: 0;
+  transition:
+    max-width 220ms ease,
+    opacity 220ms ease,
+    padding 220ms ease;
+}
+
+.waypoint:hover .waypointDiamond,
+.waypoint:focus-visible .waypointDiamond {
+  transform: rotate(45deg) scale(1.08);
+  box-shadow:
+    0 14px 30px rgba(8, 17, 35, 0.22),
+    0 0 0 12px rgba(255, 255, 255, 0.12);
+}
+
+.waypoint:hover .waypointLabel,
+.waypoint:focus-visible .waypointLabel {
+  max-width: 220px;
+  padding: 8px 14px;
   opacity: 1;
 }
 
-@media (max-width: 900px) {
-  .hero {
-    min-height: 520px;
+.exitButton {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 4;
+  padding: 10px 16px;
+  border: 1px solid rgba(16, 32, 48, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 251, 246, 0.86);
+  color: #132436;
+  font-weight: 700;
+  box-shadow: 0 16px 28px rgba(8, 17, 35, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.modalBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(6, 19, 39, 0.38);
+}
+
+.modalPanel {
+  width: min(540px, calc(100vw - 32px));
+  padding: 28px 28px 24px;
+  border: 1px solid transparent;
+  border-radius: 26px;
+  box-shadow: 0 30px 70px rgba(6, 19, 39, 0.26);
+}
+
+.modalClose {
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+}
+
+.modalEyebrow {
+  margin: 18px 0 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.modalTitle {
+  margin: 0 0 12px;
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  line-height: 1;
+}
+
+.modalIntro {
+  margin: 0 0 18px;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.modalList {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 12px;
+  line-height: 1.65;
+}
+
+.gardenModalOpen .gardenFrame {
+  pointer-events: none;
+}
+
+.gardenModalOpen .modalBackdrop,
+.gardenModalOpen .modalPanel,
+.gardenModalOpen .modalClose {
+  pointer-events: auto;
+}
+
+.contentSection {
+  padding: 80px 20px 96px;
+  background:
+    radial-gradient(circle at top left, rgba(246, 217, 232, 0.22), transparent 24%),
+    radial-gradient(circle at top right, rgba(190, 227, 248, 0.28), transparent 24%),
+    linear-gradient(180deg, rgba(248, 242, 235, 0.98), rgba(238, 245, 243, 0.98));
+}
+
+.contentHeader {
+  width: min(880px, 100%);
+  margin: 0 auto 32px;
+  text-align: center;
+}
+
+.contentEyebrow {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #51647d;
+}
+
+.contentTitle {
+  margin: 0 0 14px;
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  line-height: 1.02;
+  color: #081123;
+}
+
+.contentLead {
+  max-width: 58ch;
+  margin: 0 auto;
+  color: #4d6279;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.cardGrid {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.contentCard {
+  padding: 24px;
+  border: 1px solid rgba(8, 17, 35, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 251, 246, 0.82);
+  box-shadow: 0 20px 42px rgba(8, 17, 35, 0.08);
+}
+
+.cardTitle {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  color: #081123;
+}
+
+.cardBody {
+  margin: 0;
+  color: #4d6279;
+  line-height: 1.7;
+}
+
+@keyframes loadingPulse {
+  0% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(246, 217, 232, 0.58);
   }
 
-  .title {
-    max-width: 14ch;
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 18px rgba(246, 217, 232, 0);
+  }
+
+  100% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(246, 217, 232, 0);
+  }
+}
+
+@media (max-width: 900px) {
+  .exitButton {
+    top: 16px;
+    left: 16px;
+  }
+
+  .cardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ticketButton {
+    min-width: 156px;
+    padding: 14px 20px;
+  }
+
+  .waypointLabel {
+    display: none;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .contentSection {
+    padding: 72px 16px 84px;
   }
 }

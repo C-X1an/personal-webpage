@@ -4,9 +4,19 @@ import Image from 'next/image';
 import heroImage from '../assets/images/hero.png';
 import styles from '../styles/Hero.module.css';
 
-export default function Hero({ onTicketClick, statusMessage }) {
+export default function Hero({
+  onTicketClick,
+  isTransitioning = false,
+  isGardenOpen = false,
+}) {
   return (
-    <section className={styles.hero} aria-labelledby="hero-title">
+    <section
+      className={clsx(styles.hero, {
+        [styles.heroTransitioning]: isTransitioning,
+        [styles.heroGardenOpen]: isGardenOpen,
+      })}
+      aria-label="Chong Xian's garden entrance"
+    >
       <div className={styles.imageFrame}>
         <Image
           src={heroImage}
@@ -18,34 +28,20 @@ export default function Hero({ onTicketClick, statusMessage }) {
         />
       </div>
 
-      <div className={styles.overlay} aria-hidden="true" />
+      <div className={styles.heroTint} aria-hidden="true" />
+      <div className={styles.heroGlow} aria-hidden="true" />
 
-      <div className={styles.content}>
-        <p className={styles.eyebrow}>Morning garden portfolio</p>
-        <h1 id="hero-title" className={styles.title}>
-          Step through the gate and into Chong Xian&apos;s work.
-        </h1>
-        <p className={styles.summary}>
-          The first release keeps the landing view lightweight while preparing
-          the handoff into the interactive garden experience.
-        </p>
-
+      <div className={styles.heroCenter}>
         <button
           type="button"
+          role="button"
+          tabIndex={0}
+          aria-label="Enter Chong Xian's garden (free ticket)"
           className={styles.ticketButton}
           onClick={onTicketClick}
         >
           Free ticket
         </button>
-
-        <p
-          className={clsx(styles.status, {
-            [styles.statusVisible]: Boolean(statusMessage),
-          })}
-          aria-live="polite"
-        >
-          {statusMessage || ' '}
-        </p>
       </div>
     </section>
   );
